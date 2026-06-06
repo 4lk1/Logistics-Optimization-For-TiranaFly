@@ -1,87 +1,123 @@
-# filename: optimization/facility_location.py
+from ortools.linear_solver import pywraplp
 import numpy as np
-from typing import List, Tuple, Dict, Any
-from schemas.io_models import HexCell
-from gis.coordinate_utils import haversine_distance
-from optimization.weighted_kmeans import run_weighted_kmeans
-from optimization.p_median import solve_p_median_milp
-from optimization.p_center import solve_p_center_milp
-from optimization.set_cover import solve_set_cover_milp
+from .models import DepotCandidate, DemandAssignment, OptimizationResult
+import time
 
-class FacilityLocationComparativeHarness:
-    def __init__(self, candidate_cells: List[HexCell], p_facilities: int):
-        self.cells = candidate_cells
-        self.p = p_facilities
-        self.num_nodes = len(candidate_cells)
-        self._build_distance_matrix()
+class FacilityLocationOptimizer:
+    """
+    Solves the Capacitated Facility Location Problem (CFLP).
+    Objective: Minimize (Fixed Depot Costs + Variable Assignment Costs).
+    """
 
-    def _build_distance_matrix(self):
-        self.dist_matrix = np.zeros((self.num_nodes, self.num_nodes))
-        self.weights = np.array([c.local_demand_coefficient for c in self.cells])
-        
-        for i in range(self.num_nodes):
-            for j in range(self.num_nodes):
-                self.dist_matrix[i, j] = haversine_distance(
-                    self.cells[i].centroid_lat, self.cells[i].centroid_lon,
-                    self.cells[j].centroid_lat, self.cells[j].centroid_lon
+    def __init__(self, fixed_cost: float = 50000.0, unit_transport_cost: float = 0.1):
+        self.fixed_cost = fixed_cost
+        self.unit_transport_cost = unit_transport_cost
+
+    def optimize(self, demand_coords: np.ndarray, candidate_coords: np.ndarray, populations: np.ndarray, capacities: np.ndarray) -> OptimizationResult:
+        """
+        Solves CFLP.
+        """
+        solver = pywraplp.Solver.CreateSolver('SCIP')
+        if not solver:
+            raise RuntimeError("SCIP solver not available")
+
+        num_demand = len(demand_coords)
+        num_candidates = len(candidate_coords)
+
+        # 1. Variables
+        # y[j] = 1 if depot j is opened
+        y = {}
+        for j in range(num_candidates):
+            y[j] = solver.BoolVar(f'y_{j}')
+
+        # x[i, j] = fraction of demand i served by depot j
+        x = {}
+        for i in range(num_demand):
+            for j in range(num_candidates):
+                x[i, j] = solver.NumVar(0, 1, f'x_{i}_{j}')
+
+        # 2. Constraints
+        # Each demand must be fully served
+        for i in range(num_demand):
+            solver.Add(sum(x[i, j] for j in range(num_candidates)) == 1)
+
+        # Capacity constraint for each depot
+        for j in range(num_candidates):
+            solver.Add(sum(x[i, j] * populations[i] for i in range(num_demand)) <= capacities[j] * y[j])
+
+        # 3. Objective: Minimize fixed costs + transportation costs
+        # transport_cost = dist * population * unit_transport_cost
+        objective = solver.Objective()
+        for j in range(num_candidates):
+            objective.SetCoefficient(y[j], float(self.fixed_cost))
+            
+        for i in range(num_demand):
+            for j in range(num_candidates):
+                dist = self._haversine(
+                    demand_coords[i, 0], demand_coords[i, 1],
+                    candidate_coords[j, 0], candidate_coords[j, 1]
                 )
-
-    def evaluate_p_median_cost(self, selected_indices: List[int]) -> float:
-        """Evaluates sum of demand-weighted travel distances."""
-        if not selected_indices:
-            return float('inf')
-        sub_matrix = self.dist_matrix[:, selected_indices]
-        min_distances = np.min(sub_matrix, axis=1)
-        return float(np.sum(min_distances * self.weights))
-
-    def evaluate_p_center_cost(self, selected_indices: List[int]) -> float:
-        """Evaluates the minimax distance constraint to isolate edge service latency."""
-        if not selected_indices:
-            return float('inf')
-        sub_matrix = self.dist_matrix[:, selected_indices]
-        min_distances = np.min(sub_matrix, axis=1)
-        return float(np.max(min_distances))
-
-    def run_greedy_set_cover(self, radius_km: float = 6.0) -> List[int]:
-        """Greedy heuristic approximation for the Set Covering Location Problem."""
-        uncovered = set(range(self.num_nodes))
-        selected_depots = []
+                cost = dist * populations[i] * self.unit_transport_cost
+                objective.SetCoefficient(x[i, j], float(cost))
         
-        while len(uncovered) > 0 and len(selected_depots) < self.p:
-            best_candidate = -1
-            best_coverage = set()
-            
-            for j in range(self.num_nodes):
-                covered_by_j = set([i for i in uncovered if self.dist_matrix[i, j] <= radius_km])
-                if len(covered_by_j) > len(best_coverage):
-                    best_coverage = covered_by_j
-                    best_candidate = j
-            
-            if best_candidate == -1 or len(best_coverage) == 0:
-                # Fallback to absolute maximum remaining weight node
-                remaining_list = list(uncovered)
-                best_candidate = remaining_list[np.argmax(self.weights[remaining_list])]
-                best_coverage = {best_candidate}
-                
-            selected_depots.append(best_candidate)
-            uncovered -= best_coverage
-            
-        return selected_depots
+        objective.SetMinimization()
 
-    # --- Integrated custom mathematical optimization solvers ---
+        # 4. Solve
+        start_time = time.perf_counter()
+        status = solver.Solve()
+        end_time = time.perf_counter()
 
-    def run_weighted_kmeans(self) -> List[Tuple[float, float]]:
-        """Runs custom geographically weighted K-Means using Haversine distance."""
-        return run_weighted_kmeans(self.cells, self.p)
+        if status == pywraplp.Solver.OPTIMAL or status == pywraplp.Solver.FEASIBLE:
+            depots = []
+            for j in range(num_candidates):
+                if y[j].solution_value() > 0.5:
+                    depots.append(DepotCandidate(
+                        id=f"cflp_depot_{j}",
+                        lat=candidate_coords[j, 0],
+                        lng=candidate_coords[j, 1],
+                        fixed_cost=self.fixed_cost,
+                        capacity=int(capacities[j])
+                    ))
 
-    def run_p_median(self) -> List[int]:
-        """Solves the p-median problem exactly using MILP (HiGHS) with heuristic fallback."""
-        return solve_p_median_milp(self.cells, self.p, self.dist_matrix)
+            assignments = []
+            total_pop = 0
+            total_dist = 0.0
+            max_dist = 0.0
+            for i in range(num_demand):
+                for j in range(num_candidates):
+                    if x[i, j].solution_value() > 0.01: # Small epsilon
+                        dist = self._haversine(
+                            demand_coords[i, 0], demand_coords[i, 1],
+                            candidate_coords[j, 0], candidate_coords[j, 1]
+                        )
+                        pop_assigned = populations[i] * x[i, j].solution_value()
+                        assignments.append(DemandAssignment(
+                            h3_id=str(i),
+                            depot_id=f"cflp_depot_{j}",
+                            distance=dist,
+                            population_served=int(pop_assigned)
+                        ))
+                        total_pop += pop_assigned
+                        total_dist += dist * pop_assigned
+                        max_dist = max(max_dist, dist)
 
-    def run_p_center(self) -> List[int]:
-        """Solves the p-center problem exactly using MILP (HiGHS) with heuristic fallback."""
-        return solve_p_center_milp(self.cells, self.p, self.dist_matrix)
+            return OptimizationResult(
+                method_name="Facility Location",
+                depots=depots,
+                assignments=assignments,
+                total_population_served=int(total_pop),
+                total_cost=objective.Value(),
+                avg_distance=total_dist / total_pop if total_pop > 0 else 0,
+                max_distance=max_dist,
+                runtime_sec=end_time - start_time
+            )
+        else:
+            raise RuntimeError("Facility Location solver failed")
 
-    def run_set_cover(self, radius_km: float) -> List[int]:
-        """Solves the Set Covering Location Problem exactly using MILP (HiGHS) with heuristic fallback."""
-        return solve_set_cover_milp(self.cells, radius_km, self.dist_matrix)
+    @staticmethod
+    def _haversine(lat1, lon1, lat2, lon2) -> float:
+        from math import radians, cos, sin, asin, sqrt
+        R = 6371000
+        dLat, dLon = radians(lat2-lat1), radians(lon2-lon1)
+        a = sin(dLat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dLon/2)**2
+        return R * 2 * asin(sqrt(a))

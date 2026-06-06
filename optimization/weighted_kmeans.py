@@ -1,80 +1,97 @@
-# filename: optimization/weighted_kmeans.py
 import numpy as np
-import math
-from typing import List, Tuple
-from schemas.io_models import HexCell
+from sklearn.cluster import KMeans
+from typing import List, Tuple, Optional
+from .models import DepotCandidate, OptimizationResult, DemandAssignment
+import time
 
-def run_weighted_kmeans(client_cells: List[HexCell], k: int, max_iterations: int = 100, tolerance: float = 1e-6) -> List[Tuple[float, float]]:
+class WeightedKMeansOptimizer:
     """
-    Executes a custom geographically weighted K-Means clustering.
-    Uses Haversine distance metric for allocating clusters to account for spherical geometry of latitude/longitude.
+    Population-weighted clustering for initial depot placement.
+    Finds centroids that minimize the weighted squared distance to demand points.
     """
-    if not client_cells:
-        return []
-    
-    # 1. Extract coordinates and demand weights
-    coords = np.array([[c.centroid_lat, c.centroid_lon] for c in client_cells])
-    weights = np.array([c.local_demand_coefficient for c in client_cells])
-    
-    # Normalize weights to prevent scaling overflow
-    total_weight = np.sum(weights)
-    if total_weight > 0:
-        normalized_weights = weights / total_weight
-    else:
-        normalized_weights = np.ones(len(client_cells)) / len(client_cells)
+
+    def __init__(self, n_clusters: int = 10):
+        self.n_clusters = n_clusters
+        self.centroids: Optional[np.ndarray] = None
+        self.labels: Optional[np.ndarray] = None
+
+    def optimize(self, h3_coords: np.ndarray, populations: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Runs the weighted K-Means algorithm.
+        h3_coords: Nx2 array of (lat, lng)
+        populations: N array of population counts
+        """
+        # Scikit-learn's KMeans supports sample_weight
+        kmeans = KMeans(
+            n_clusters=self.n_clusters,
+            init='k-means++',
+            n_init=10,
+            max_iter=300,
+            random_state=42
+        )
         
-    n_samples = len(client_cells)
-    if n_samples <= k:
-        return [(float(pt[0]), float(pt[1])) for pt in coords]
+        start_time = time.perf_counter()
+        kmeans.fit(h3_coords, sample_weight=populations)
+        end_time = time.perf_counter()
         
-    # 2. Initialize centroids using demand-weighted k-means++ probability distribution
-    rng = np.random.default_rng(42)
-    initial_idx = rng.choice(n_samples, size=k, replace=False, p=normalized_weights)
-    centroids = coords[initial_idx]
-    
-    # 3. Iterative clustering loop
-    for iteration in range(max_iterations):
-        # Calculate Haversine distance matrix from all cells to all centroids
-        # Distance matrix shape: (n_samples, k)
-        distances = np.zeros((n_samples, k))
+        self.centroids = kmeans.cluster_centers_
+        self.labels = kmeans.labels_
+        self.runtime = end_time - start_time
         
-        for j in range(k):
-            lat1 = np.radians(coords[:, 0])
-            lon1 = np.radians(coords[:, 1])
-            lat2 = np.radians(centroids[j, 0])
-            lon2 = np.radians(centroids[j, 1])
+        return self.centroids, self.labels
+
+    def get_results(self, h3_ids: List[str], h3_coords: np.ndarray, populations: np.ndarray) -> OptimizationResult:
+        """Processes the clustering output into a standard OptimizationResult."""
+        if self.centroids is None:
+            raise ValueError("Must run optimize() before get_results()")
+
+        depots = []
+        for i, center in enumerate(self.centroids):
+            depots.append(DepotCandidate(
+                id=f"kmeans_depot_{i}",
+                lat=center[0],
+                lng=center[1]
+            ))
+
+        assignments = []
+        total_pop_served = 0
+        total_dist = 0.0
+        max_dist = 0.0
+
+        for idx, cluster_idx in enumerate(self.labels):
+            depot = depots[cluster_idx]
+            dist = self._haversine(h3_coords[idx][0], h3_coords[idx][1], depot.lat, depot.lng)
             
-            dlat = lat2 - lat1
-            dlon = lon2 - lon1
+            pop = populations[idx]
+            assignments.append(DemandAssignment(
+                h3_id=h3_ids[idx],
+                depot_id=depot.id,
+                distance=dist,
+                population_served=int(pop)
+            ))
             
-            a = np.sin(dlat/2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2)**2
-            # Earth radius R = 6371.0 km
-            distances[:, j] = 2 * 6371.0 * np.arcsin(np.sqrt(a))
-            
-        # Assign cells to nearest centroid
-        assignments = np.argmin(distances, axis=1)
-        
-        # Update centroids to demand-weighted centers of assigned cells
-        new_centroids = np.copy(centroids)
-        for j in range(k):
-            mask = (assignments == j)
-            if np.any(mask):
-                assigned_coords = coords[mask]
-                assigned_weights = normalized_weights[mask]
-                sum_w = np.sum(assigned_weights)
-                if sum_w > 0:
-                    new_centroids[j] = np.sum(assigned_coords * assigned_weights[:, np.newaxis], axis=0) / sum_w
-                else:
-                    new_centroids[j] = np.mean(assigned_coords, axis=0)
-            else:
-                # Re-initialize empty cluster to the cell with maximum distance to its nearest centroid
-                min_dists = np.min(distances, axis=1)
-                new_centroids[j] = coords[np.argmax(min_dists)]
-                
-        # Convergence check
-        shift = np.sum(np.linalg.norm(new_centroids - centroids, axis=1))
-        if shift < tolerance:
-            break
-        centroids = new_centroids
-        
-    return [(float(c[0]), float(c[1])) for c in centroids]
+            total_pop_served += pop
+            total_dist += dist * pop
+            max_dist = max(max_dist, dist)
+
+        avg_dist = total_dist / total_pop_served if total_pop_served > 0 else 0
+
+        return OptimizationResult(
+            method_name="Weighted K-Means",
+            depots=depots,
+            assignments=assignments,
+            total_population_served=int(total_pop_served),
+            total_cost=len(depots) * 50000.0, # Placeholder cost
+            avg_distance=avg_dist,
+            max_distance=max_dist,
+            runtime_sec=self.runtime
+        )
+
+    @staticmethod
+    def _haversine(lat1, lon1, lat2, lon2) -> float:
+        from math import radians, cos, sin, asin, sqrt
+        R = 6371000  # meters
+        dLat = radians(lat2 - lat1)
+        dLon = radians(lon2 - lon1)
+        a = sin(dLat / 2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dLon / 2)**2
+        return R * 2 * asin(sqrt(a))

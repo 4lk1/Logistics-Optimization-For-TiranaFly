@@ -1,56 +1,85 @@
-# filename: graph/shortest_path.py
 import networkx as nx
-from typing import List, Tuple, Dict, Any
-import heapq
-import math
+from typing import List, Tuple, Optional, Dict, Any
+import time
 
-class ShortestPathRoutingEngine:
-    @staticmethod
-    def execute_dijkstra(graph: nx.DiGraph, source: str, target: str) -> Tuple[List[str], float]:
-        try:
-            path = nx.dijkstra_path(graph, source, target, weight="weight")
-            cost = nx.dijkstra_path_length(graph, source, target, weight="weight")
-            return path, cost
-        except nx.NetworkXNoPath:
-            return [], float('inf')
+class ShortestPathEngine:
+    """
+    Unified API for shortest path calculations on the drone network graph.
+    Supports multiple algorithms optimized for different use cases.
+    """
 
     @staticmethod
-    def execute_a_star(graph: nx.DiGraph, source: str, target: str) -> Tuple[List[str], float]:
+    def dijkstra(graph: nx.DiGraph, source: str, target: str, weight: str = 'weight') -> Tuple[List[str], float]:
+        """
+        Classic Dijkstra's algorithm. 
+        Complexity: O(E + V log V).
+        Best for general single-source single-target paths.
+        """
+        path = nx.dijkstra_path(graph, source, target, weight=weight)
+        cost = nx.dijkstra_path_length(graph, source, target, weight=weight)
+        return path, cost
+
+    @staticmethod
+    def a_star(graph: nx.DiGraph, source: str, target: str, weight: str = 'weight') -> Tuple[List[str], float]:
+        """
+        A* search with Haversine heuristic.
+        Complexity: O(E) in best case, O(V log V) in worst case.
+        Faster than Dijkstra when a good heuristic is available.
+        """
         def heuristic(u, v):
-            u_data = graph.nodes[u]
-            v_data = graph.nodes[v]
-            # Haversine distance used as admissible tracking heuristic multiplier baseline
-            R = 6371.0
-            dlat = math.radians(v_data['lat'] - u_data['lat'])
-            dlon = math.radians(v_data['lon'] - u_data['lon'])
-            a = math.sin(dlat/2)**2 + math.cos(math.radians(u_data['lat'])) * math.cos(math.radians(v_data['lat'])) * math.sin(dlon/2)**2
-            return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1-a)) * 45.0 # Scaled to match energy cost metrics
+            u_data = graph.nodes[u]['data']
+            v_data = graph.nodes[v]['data']
+            # Haversine distance as heuristic
+            from .graph_builder import GraphBuilder
+            return GraphBuilder._haversine(u_data.lat, u_data.lng, v_data.lat, v_data.lng) / 15.0 # Min possible cost estimate
 
-        try:
-            path = nx.astar_path(graph, source, target, heuristic=heuristic, weight="weight")
-            cost = nx.astar_path_length(graph, source, target, heuristic=heuristic, weight="weight")
-            return path, cost
-        except nx.NetworkXNoPath:
-            return [], float('inf')
+        path = nx.astar_path(graph, source, target, heuristic=heuristic, weight=weight)
+        cost = nx.astar_path_length(graph, source, target, heuristic=heuristic, weight=weight)
+        return path, cost
 
     @staticmethod
-    def execute_bidirectional_dijkstra(graph: nx.DiGraph, source: str, target: str) -> Tuple[List[str], float]:
-        try:
-            cost, path = nx.bidirectional_dijkstra(graph, source, target, weight="weight")
-            return path, cost
-        except nx.NetworkXNoPath:
-            return [], float('inf')
+    def bidirectional_dijkstra(graph: nx.DiGraph, source: str, target: str, weight: str = 'weight') -> Tuple[List[str], float]:
+        """
+        Bidirectional Dijkstra's algorithm.
+        Complexity: O(E + V log V), but typically visits fewer nodes than standard Dijkstra.
+        """
+        dist, path = nx.bidirectional_dijkstra(graph, source, target, weight=weight)
+        return path, dist
 
     @staticmethod
-    def execute_yen_k_shortest_paths(graph: nx.DiGraph, source: str, target: str, k: int = 3) -> List[Tuple[List[str], float]]:
-        try:
-            generator = nx.shortest_simple_paths(graph, source, target, weight="weight")
-            paths = []
-            for i, path in enumerate(generator):
-                if i >= k:
-                    break
-                cost = sum(graph[path[j]][path[j+1]]["weight"] for j in range(len(path)-1))
-                paths.append((path, cost))
-            return paths
-        except nx.NetworkXNoPath:
-            return []
+    def yen_k_shortest_paths(graph: nx.DiGraph, source: str, target: str, k: int = 3, weight: str = 'weight') -> List[Tuple[List[str], float]]:
+        """
+        Yen's algorithm for finding K-shortest simple paths.
+        Complexity: O(K V (E + V log V)).
+        Used for identifying alternative routes in case of congestion or dynamic obstacles.
+        """
+        paths = list(nx.shortest_simple_paths(graph, source, target, weight=weight))
+        results = []
+        for i, path in enumerate(paths):
+            if i >= k:
+                break
+            cost = sum(graph[path[j]][path[j+1]][weight] for j in range(len(path)-1))
+            results.append((path, cost))
+        return results
+
+    @staticmethod
+    def benchmark_algorithms(graph: nx.DiGraph, source: str, target: str) -> Dict[str, Any]:
+        """Benchmarks the performance of different shortest path algorithms."""
+        results = {}
+        algorithms = {
+            "Dijkstra": ShortestPathEngine.dijkstra,
+            "A*": ShortestPathEngine.a_star,
+            "Bidirectional Dijkstra": ShortestPathEngine.bidirectional_dijkstra
+        }
+
+        for name, func in algorithms.items():
+            start_time = time.perf_counter()
+            path, cost = func(graph, source, target)
+            end_time = time.perf_counter()
+            results[name] = {
+                "time_ms": (end_time - start_time) * 1000,
+                "cost": cost,
+                "path_length": len(path)
+            }
+        
+        return results

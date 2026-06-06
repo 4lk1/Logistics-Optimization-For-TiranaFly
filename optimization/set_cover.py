@@ -1,77 +1,112 @@
-# filename: optimization/set_cover.py
+from ortools.linear_solver import pywraplp
 import numpy as np
-from typing import List
-from scipy.optimize import milp, Bounds, LinearConstraint
-from schemas.io_models import HexCell
+from .models import DepotCandidate, DemandAssignment, OptimizationResult
+import time
 
-def solve_set_cover_milp(cells: List[HexCell], radius_km: float, dist_matrix: np.ndarray) -> List[int]:
+class SetCoverOptimizer:
     """
-    Solves the Set Covering Location Problem (SCLP) exactly using SciPy's MILP solver.
-    Minimizes the number of depots built such that all clients are covered within a radius.
-    Falls back to a greedy set covering heuristic if the solver fails.
-    
-    Returns:
-        List of selected cell indices hosting depots.
+    Solves the Set Covering Problem (SCP).
+    Objective: Minimize the number of depots such that every demand point is within R_max.
     """
-    n = len(cells)
-    if n == 0:
-        return []
-        
-    # Cost coefficient vector: minimize sum y_j
-    c = np.ones(n)
-    
-    # A_ij = 1 if dist(i, j) <= radius_km, else 0
-    # Constraint: Sum_j A_ij * y_j >= 1 for all i
-    A = (dist_matrix <= radius_km).astype(float)
-    
-    # Represent as SciPy LinearConstraint: lower_bounds <= A * y <= upper_bounds
-    lower_bounds = np.ones(n)
-    upper_bounds = np.full(n, np.inf)
-    
-    linear_constraints = LinearConstraint(A, lower_bounds, upper_bounds)
-    
-    # Variable bounds: 0 <= y_j <= 1
-    bounds = Bounds(np.zeros(n), np.ones(n))
-    
-    # Integrality: all variables are binary (1.0)
-    integrality = np.ones(n)
-    
-    res = milp(c=c, bounds=bounds, constraints=linear_constraints, integrality=integrality)
-    
-    if res.success and res.x is not None:
-        selected_indices = [j for j in range(n) if res.x[j] > 0.5]
-        return selected_indices
-        
-    # Fallback to greedy heuristic
-    return solve_set_cover_greedy(n, radius_km, dist_matrix)
 
-def solve_set_cover_greedy(n: int, radius_km: float, dist_matrix: np.ndarray) -> List[int]:
-    """
-    Greedy Set Cover heuristic.
-    """
-    uncovered = set(range(n))
-    selected = []
-    
-    while uncovered:
-        best_candidate = -1
-        best_coverage = set()
-        
-        for j in range(n):
-            covered = set([i for i in uncovered if dist_matrix[i, j] <= radius_km])
-            if len(covered) > len(best_coverage):
-                best_coverage = covered
-                best_candidate = j
+    def __init__(self, r_max_m: float = 5000.0):
+        self.r_max_m = r_max_m
+
+    def optimize(self, demand_coords: np.ndarray, candidate_coords: np.ndarray) -> OptimizationResult:
+        """
+        Finds the minimum set of depots to cover all demand.
+        """
+        solver = pywraplp.Solver.CreateSolver('SCIP')
+        if not solver:
+            raise RuntimeError("SCIP solver not available")
+
+        num_demand = len(demand_coords)
+        num_candidates = len(candidate_coords)
+
+        # 1. Coverage Matrix (N x M)
+        # a[i, j] = 1 if demand i is covered by candidate j within r_max
+        a = np.zeros((num_demand, num_candidates), dtype=int)
+        for i in range(num_demand):
+            for j in range(num_candidates):
+                dist = self._haversine(
+                    demand_coords[i, 0], demand_coords[i, 1],
+                    candidate_coords[j, 0], candidate_coords[j, 1]
+                )
+                if dist <= self.r_max_m:
+                    a[i, j] = 1
+
+        # 2. Variables
+        # y[j] = 1 if depot j is opened
+        y = {}
+        for j in range(num_candidates):
+            y[j] = solver.BoolVar(f'y_{j}')
+
+        # 3. Constraints
+        # Every demand point i must be covered by at least one open depot
+        for i in range(num_demand):
+            solver.Add(sum(a[i, j] * y[j] for j in range(num_candidates)) >= 1)
+
+        # 4. Objective: Minimize total depots
+        solver.Minimize(sum(y[j] for j in range(num_candidates)))
+
+        # 5. Solve
+        start_time = time.perf_counter()
+        status = solver.Solve()
+        end_time = time.perf_counter()
+
+        if status == pywraplp.Solver.OPTIMAL or status == pywraplp.Solver.FEASIBLE:
+            depots = []
+            for j in range(num_candidates):
+                if y[j].solution_value() > 0.5:
+                    depots.append(DepotCandidate(
+                        id=f"setcover_depot_{j}",
+                        lat=candidate_coords[j, 0],
+                        lng=candidate_coords[j, 1]
+                    ))
+
+            # Assignments (to the nearest open depot)
+            assignments = []
+            total_dist = 0.0
+            max_dist = 0.0
+            for i in range(num_demand):
+                best_dist = float('inf')
+                best_depot = None
+                for j in range(num_candidates):
+                    if y[j].solution_value() > 0.5 and a[i, j] == 1:
+                        dist = self._haversine(
+                            demand_coords[i, 0], demand_coords[i, 1],
+                            candidate_coords[j, 0], candidate_coords[j, 1]
+                        )
+                        if dist < best_dist:
+                            best_dist = dist
+                            best_depot = f"setcover_depot_{j}"
                 
-        if best_candidate == -1 or not best_coverage:
-            # If any nodes are completely isolated (islands exceeding radius), cover them individually
-            if uncovered:
-                isolated_node = list(uncovered)[0]
-                selected.append(isolated_node)
-                uncovered.remove(isolated_node)
-                continue
-            break
-            
-        selected.append(best_candidate)
-        uncovered -= best_coverage
-        
-    return selected
+                assignments.append(DemandAssignment(
+                    h3_id=str(i),
+                    depot_id=best_depot,
+                    distance=best_dist,
+                    population_served=0
+                ))
+                total_dist += best_dist
+                max_dist = max(max_dist, best_dist)
+
+            return OptimizationResult(
+                method_name="Set Cover",
+                depots=depots,
+                assignments=assignments,
+                total_population_served=0,
+                total_cost=len(depots) * 50000.0,
+                avg_distance=total_dist / num_demand if num_demand > 0 else 0,
+                max_distance=max_dist,
+                runtime_sec=end_time - start_time
+            )
+        else:
+            raise RuntimeError("Set Cover solver failed")
+
+    @staticmethod
+    def _haversine(lat1, lon1, lat2, lon2) -> float:
+        from math import radians, cos, sin, asin, sqrt
+        R = 6371000
+        dLat, dLon = radians(lat2-lat1), radians(lon2-lon1)
+        a = sin(dLat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dLon/2)**2
+        return R * 2 * asin(sqrt(a))
