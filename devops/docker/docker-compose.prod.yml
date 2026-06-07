@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  postgis:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-tiranafly}
+    volumes:
+      - postgis_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  backend:
+    build:
+      context: ../..
+      dockerfile: devops/docker/Dockerfile.python
+      target: backend
+    environment:
+      POSTGRES_SERVER: postgis
+      REDIS_HOST: redis
+    depends_on:
+      postgis:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  ai-service:
+    build:
+      context: ../..
+      dockerfile: devops/docker/Dockerfile.python
+      target: ai-service
+    depends_on:
+      - redis
+
+  simulation-service:
+    build:
+      context: ../..
+      dockerfile: devops/docker/Dockerfile.python
+      target: simulation-service
+    depends_on:
+      - redis
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: devops/docker/Dockerfile.python
+      target: worker
+    environment:
+      POSTGRES_SERVER: postgis
+      REDIS_HOST: redis
+    depends_on:
+      - postgis
+      - redis
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: devops/docker/Dockerfile.frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgis_data:
+  redis_data:

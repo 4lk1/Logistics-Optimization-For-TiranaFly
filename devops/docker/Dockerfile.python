@@ -1,0 +1,48 @@
+# Base image for all Python services
+FROM python:3.11-slim as python-base
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    gcc \
+    binutils \
+    libproj-dev \
+    gdal-bin \
+    libgdal-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY backend/requirements.txt .
+RUN pip install -r requirements.txt
+
+# For AI/ML libs that might not be in backend/requirements.txt
+RUN pip install xgboost lightgbm scikit-learn pandas numpy shap
+
+COPY . .
+
+# --- Backend API Stage ---
+FROM python-base as backend
+EXPOSE 8000
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# --- AI Inference Service Stage ---
+FROM python-base as ai-service
+EXPOSE 8001
+# Assuming an ai_app.py exists or will be created for the service
+CMD ["uvicorn", "ai.inference_service:app", "--host", "0.0.0.0", "--port", "8001"]
+
+# --- Simulation Service Stage ---
+FROM python-base as simulation-service
+EXPOSE 8002
+CMD ["uvicorn", "simulation.simulation_engine:app", "--host", "0.0.0.0", "--port", "8002"]
+
+# --- Worker Stage ---
+FROM python-base as worker
+CMD ["celery", "-A", "backend.worker.app", "worker", "--loglevel=info"]

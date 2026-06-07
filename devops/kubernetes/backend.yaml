@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tiranafly-backend
+  namespace: tiranafly
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: tiranafly-backend
+  template:
+    metadata:
+      labels:
+        app: tiranafly-backend
+    spec:
+      containers:
+      - name: backend
+        image: user/tiranafly-backend:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: POSTGRES_SERVER
+          value: postgis-service
+        - name: REDIS_HOST
+          value: redis-service
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: tiranafly
+spec:
+  selector:
+    app: tiranafly-backend
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000

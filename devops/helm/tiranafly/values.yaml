@@ -1,0 +1,43 @@
+replicaCount: 2
+
+image:
+  repository: user/tiranafly
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+backend:
+  service:
+    type: ClusterIP
+    port: 8000
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+
+frontend:
+  service:
+    type: LoadBalancer
+    port: 80
+
+postgresql:
+  enabled: true
+  auth:
+    database: tiranafly
+    username: postgres
+    password: password123
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+
+redis:
+  enabled: true
+  auth:
+    enabled: false
+
+monitoring:
+  prometheus:
+    enabled: true
+  grafana:
+    enabled: true

@@ -12,6 +12,7 @@ from gis.coordinate_utils import haversine_distance, validate_tirana_bounds
 from optimization.facility_location import FacilityLocationComparativeHarness
 from fleet.queue_model import DepotQueueEngine
 from fleet.battery_optimizer import BatteryConsumptionEngine
+from typing import List
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s - %(levelname)s] %(message)s")
 
@@ -63,9 +64,9 @@ def generate_synthetic_h3_grid_seed() -> List[HexCell]:
     return cells
 
 def execute_production_pipeline():
-    logging.info("=======================================================================")
-    logging.info("             TIRANAFLY LOGISTICS INFRASTRUCTURE GENERATION ENGINE      ")
-    logging.info("=======================================================================")
+    logging.info("------------------------------------------------------------------------")
+    logging.info("             TIRANAFLY LOGISTICS INFRASTRUCTURE GENERATION ENGINE       ")
+    logging.info("------------------------------------------------------------------------")
     
     # 1. Load census demographics and verify structural invariants
     mapper = PopulationMapper(target_denominator=807029)
