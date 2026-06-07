@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.cluster import KMeans
 from typing import List, Tuple, Optional
 from .models import DepotCandidate, OptimizationResult, DemandAssignment
+from gis.coordinate_utils import haversine_distance
 import time
 
 class WeightedKMeansOptimizer:
@@ -21,7 +22,6 @@ class WeightedKMeansOptimizer:
         h3_coords: Nx2 array of (lat, lng)
         populations: N array of population counts
         """
-        # Scikit-learn's KMeans supports sample_weight
         kmeans = KMeans(
             n_clusters=self.n_clusters,
             init='k-means++',
@@ -60,7 +60,7 @@ class WeightedKMeansOptimizer:
 
         for idx, cluster_idx in enumerate(self.labels):
             depot = depots[cluster_idx]
-            dist = self._haversine(h3_coords[idx][0], h3_coords[idx][1], depot.lat, depot.lng)
+            dist = haversine_distance(h3_coords[idx][0], h3_coords[idx][1], depot.lat, depot.lng)
             
             pop = populations[idx]
             assignments.append(DemandAssignment(
@@ -81,17 +81,8 @@ class WeightedKMeansOptimizer:
             depots=depots,
             assignments=assignments,
             total_population_served=int(total_pop_served),
-            total_cost=len(depots) * 50000.0, # Placeholder cost
+            total_cost=len(depots) * 50000.0,
             avg_distance=avg_dist,
             max_distance=max_dist,
             runtime_sec=self.runtime
         )
-
-    @staticmethod
-    def _haversine(lat1, lon1, lat2, lon2) -> float:
-        from math import radians, cos, sin, asin, sqrt
-        R = 6371000  # meters
-        dLat = radians(lat2 - lat1)
-        dLon = radians(lon2 - lon1)
-        a = sin(dLat / 2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dLon / 2)**2
-        return R * 2 * asin(sqrt(a))

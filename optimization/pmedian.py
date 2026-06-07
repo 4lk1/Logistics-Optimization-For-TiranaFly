@@ -2,6 +2,7 @@ from ortools.linear_solver import pywraplp
 import numpy as np
 from typing import List, Tuple
 from .models import DepotCandidate, DemandAssignment, OptimizationResult
+from gis.coordinate_utils import haversine_distance
 import time
 
 class PMedianOptimizer:
@@ -22,7 +23,7 @@ class PMedianOptimizer:
         """
         solver = pywraplp.Solver.CreateSolver('SCIP')
         if not solver:
-            raise RuntimeError("SCIP solver not available")
+            solver = pywraplp.Solver.CreateSolver('GLOP')
 
         num_demand = len(demand_coords)
         num_candidates = len(candidate_coords)
@@ -31,7 +32,7 @@ class PMedianOptimizer:
         dist_matrix = np.zeros((num_demand, num_candidates))
         for i in range(num_demand):
             for j in range(num_candidates):
-                dist_matrix[i, j] = self._haversine(
+                dist_matrix[i, j] = haversine_distance(
                     demand_coords[i, 0], demand_coords[i, 1],
                     candidate_coords[j, 0], candidate_coords[j, 1]
                 )

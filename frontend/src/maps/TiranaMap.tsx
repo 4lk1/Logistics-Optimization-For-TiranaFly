@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Map } from 'maplibre-gl';
+import Map from 'react-map-gl/maplibre';
 import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer, ScatterplotLayer, LineLayer } from '@deck.gl/layers';
 import { H3HexagonLayer } from '@deck.gl/geo-layers';

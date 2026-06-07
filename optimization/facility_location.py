@@ -1,6 +1,6 @@
 from ortools.linear_solver import pywraplp
 import numpy as np
-from .models import DepotCandidate, DemandAssignment, OptimizationResult
+from optimization.models import DepotCandidate, DemandAssignment, OptimizationResult
 import time
 
 class FacilityLocationOptimizer:

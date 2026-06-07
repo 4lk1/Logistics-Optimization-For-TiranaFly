@@ -21,7 +21,7 @@ class H3Node(BaseGraphNode):
         if not self.h3_index:
             raise ValueError("h3_index is required for H3Node")
         # Validate H3 index
-        if not h3.h3_is_valid(self.h3_index):
+        if not h3.is_valid_cell(self.h3_index):
             raise ValueError(f"Invalid H3 index: {self.h3_index}")
 
 @dataclass(frozen=True)

@@ -21,7 +21,7 @@ def clean_registry():
 def test_demand_forecaster_training():
     df = pd.DataFrame({
         'h3_index': ['883901'] * 100,
-        'timestamp': pd.date_range('2024-01-01', periods=100, freq='H'),
+        'timestamp': pd.date_range('2024-01-01', periods=100, freq='h'),
         'demand_count': np.random.poisson(5, 100),
         'hour': np.random.randint(0, 24, 100)
     })

@@ -1,23 +1,26 @@
 #!/bin/bash
-# PostGIS Backup Script
+# Database Backup Script for TiranaFly
 
-DB_NAME=${POSTGRES_DB:-tiranafly}
-DB_USER=${POSTGRES_USER:-postgres}
-BACKUP_DIR="/backups"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+BACKUP_DIR="/backups/db"
+DB_NAME="tiranafly"
+DB_USER="tiranafly_admin"
+S3_BUCKET="s3://tiranafly-backups/db"
 
 mkdir -p $BACKUP_DIR
 
-echo "Starting backup for $DB_NAME..."
-pg_dump -U $DB_USER -h localhost $DB_NAME > $BACKUP_DIR/${DB_NAME}_$TIMESTAMP.sql
+echo "Starting backup of $DB_NAME..."
 
-if [ $? -eq 0 ]; then
-  echo "Backup successful: $BACKUP_DIR/${DB_NAME}_$TIMESTAMP.sql"
-else
-  echo "Backup failed!"
-  exit 1
-fi
+# Perform dump
+pg_dump -h db -U $DB_USER -d $DB_NAME -F c -b -v -f "$BACKUP_DIR/tiranafly_$TIMESTAMP.dump"
 
-# Retention: Delete backups older than 7 days
-find $BACKUP_DIR -type f -name "*.sql" -mtime +7 -delete
-echo "Old backups cleaned up."
+# Encrypt backup
+gpg --encrypt --recipient "admin@tiranafly.com" "$BACKUP_DIR/tiranafly_$TIMESTAMP.dump"
+
+# Upload to S3
+aws s3 cp "$BACKUP_DIR/tiranafly_$TIMESTAMP.dump.gpg" "$S3_BUCKET/"
+
+# Clean up old local backups (keep 7 days)
+find $BACKUP_DIR -type f -mtime +7 -name "*.dump*" -exec rm {} \;
+
+echo "Backup completed and uploaded to $S3_BUCKET"

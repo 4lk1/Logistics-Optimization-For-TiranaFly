@@ -9,7 +9,7 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# Set all CORS enabled origins
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,13 +18,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(gis.router, prefix=f"{settings.API_V1_STR}/gis", tags=["GIS"])
-app.include_router(optimization.router, prefix=f"{settings.API_V1_STR}/optimization", tags=["Optimization"])
-app.include_router(fleet.router, prefix=f"{settings.API_V1_STR}/fleet", tags=["Fleet"])
+# Register production routers with standardized prefixes
+app.include_router(gis.router, prefix=f"{settings.API_V1_STR}/gis", tags=["GIS Foundation"])
+app.include_router(optimization.router, prefix=f"{settings.API_V1_STR}/optimization", tags=["Optimization Engine"])
+app.include_router(fleet.router, prefix=f"{settings.API_V1_STR}/fleet", tags=["Fleet Operations"])
+
+# Legacy support for frontend calling /api directly
+app.include_router(gis.router, prefix="/api/gis", tags=["GIS Legacy"])
+app.include_router(optimization.router, prefix="/api/optimization", tags=["Optimization Legacy"])
+app.include_router(fleet.router, prefix="/api/fleet", tags=["Fleet Legacy"])
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "project": settings.PROJECT_NAME}
+    return {"status": "healthy", "project": settings.PROJECT_NAME, "version": settings.VERSION}
+
+@app.get("/")
+def root():
+    return {
+        "project": settings.PROJECT_NAME,
+        "status": "ONLINE",
+        "api_docs": "/docs"
+    }
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,28 +1,50 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: tiranafly
+spec:
+  ports:
+    - port: 8000
+  selector:
+    app: backend
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tiranafly-backend
+  name: backend
   namespace: tiranafly
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: tiranafly-backend
+      app: backend
   template:
     metadata:
       labels:
-        app: tiranafly-backend
+        app: backend
     spec:
       containers:
       - name: backend
-        image: user/tiranafly-backend:latest
+        image: tiranafly/backend:latest
         ports:
         - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: tiranafly-config
         env:
-        - name: POSTGRES_SERVER
-          value: postgis-service
-        - name: REDIS_HOST
-          value: redis-service
+        - name: DATABASE_URL
+          value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@db:5432/tiranafly"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: tiranafly-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: tiranafly-secrets
+              key: POSTGRES_PASSWORD
         resources:
           limits:
             cpu: "1"
@@ -30,16 +52,35 @@ spec:
           requests:
             cpu: "500m"
             memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
 ---
-apiVersion: v1
-kind: Service
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
 metadata:
-  name: backend-service
+  name: backend-hpa
   namespace: tiranafly
 spec:
-  selector:
-    app: tiranafly-backend
-  ports:
-    - protocol: TCP
-      port: 8000
-      targetPort: 8000
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

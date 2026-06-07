@@ -34,7 +34,7 @@ export default function Sidebar() {
           <NavLink
             key={item.path}
             to={item.path}
-            className={({ isActive }) => cn(
+            className={({ isActive }: { isActive: boolean }) => cn(
               "flex items-center px-4 py-3 rounded-lg transition-all duration-200 group",
               isActive 
                 ? "bg-blue-600/20 text-blue-400 border border-blue-600/30" 

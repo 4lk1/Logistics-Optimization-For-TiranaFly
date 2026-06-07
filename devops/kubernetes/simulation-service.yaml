@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: simulation-service
+  namespace: tiranafly
+spec:
+  ports:
+    - port: 8002
+  selector:
+    app: simulation-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simulation-service
+  namespace: tiranafly
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: simulation-service
+  template:
+    metadata:
+      labels:
+        app: simulation-service
+    spec:
+      containers:
+      - name: simulation-service
+        image: tiranafly/simulation-service:latest
+        ports:
+        - containerPort: 8002
+        resources:
+          limits:
+            cpu: "1"
+            memory: "2Gi"
+          requests:
+            cpu: "500m"
+            memory: "1Gi"

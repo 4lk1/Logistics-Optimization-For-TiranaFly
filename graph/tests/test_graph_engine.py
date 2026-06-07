@@ -17,17 +17,17 @@ class TestGraphEngine(unittest.TestCase):
         # Center of Tirana
         lat, lng = 41.3275, 19.8189
         self.h3_res = 9
-        center_h3 = h3.geo_to_h3(lat, lng, self.h3_res)
-        neighbors = h3.k_ring(center_h3, 2)
-        
+        center_h3 = h3.latlng_to_cell(lat, lng, self.h3_res)
+        neighbors = h3.grid_disk(center_h3, 2)
+
         self.h3_gdf = gpd.GeoDataFrame({
             'h3_id': list(neighbors),
             'population': [100] * len(neighbors)
-        }, geometry=[Point(h3.h3_to_geo(h)[1], h3.h3_to_geo(h)[0]) for h in neighbors], crs="EPSG:4326")
-        
+        }, geometry=[Point(h3.cell_to_latlng(h)[1], h3.cell_to_latlng(h)[0]) for h in neighbors], crs="EPSG:4326")
+
         self.builder = GraphBuilder()
         self.graph = self.builder.build_from_h3_gdf(self.h3_gdf)
-        
+
         # Add a mock depot
         depots_gdf = gpd.GeoDataFrame({
             'id': ['depot_1'],
@@ -36,7 +36,6 @@ class TestGraphEngine(unittest.TestCase):
         }, geometry=[Point(lng, lat)], crs="EPSG:4326")
         self.builder.add_depots(depots_gdf)
         self.graph = self.builder.graph
-
     def test_graph_construction(self):
         self.assertGreater(self.graph.number_of_nodes(), 0)
         self.assertGreater(self.graph.number_of_edges(), 0)

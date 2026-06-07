@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from typing import Dict, Any
 
 class QueueingModels:
@@ -38,12 +39,12 @@ class QueueingModels:
             return {"rho": rho, "stable": False}
         
         # Calculate P0 (probability of 0 in system)
-        sum_p0 = sum([(arrival_rate/service_rate)**n / np.math.factorial(n) for n in range(c)])
-        sum_p0 += ((arrival_rate/service_rate)**c / (np.math.factorial(c) * (1 - rho)))
+        sum_p0 = sum([(arrival_rate/service_rate)**n / math.factorial(n) for n in range(c)])
+        sum_p0 += ((arrival_rate/service_rate)**c / (math.factorial(c) * (1 - rho)))
         p0 = 1 / sum_p0
         
         # Lq (Expected number of customers in queue)
-        lq = (p0 * (arrival_rate/service_rate)**c * rho) / (np.math.factorial(c) * (1 - rho)**2)
+        lq = (p0 * (arrival_rate/service_rate)**c * rho) / (math.factorial(c) * (1 - rho)**2)
         
         # Wq, W, L
         wq = lq / arrival_rate
@@ -51,7 +52,7 @@ class QueueingModels:
         l = arrival_rate * w
         
         # Probability of waiting
-        p_wait = (p0 * (arrival_rate/service_rate)**c) / (np.math.factorial(c) * (1 - rho))
+        p_wait = (p0 * (arrival_rate/service_rate)**c) / (math.factorial(c) * (1 - rho))
         
         return {
             "rho": rho,

@@ -44,9 +44,9 @@ class Drone:
 @dataclass
 class FlightMission:
     """Represents a delivery or service mission."""
-    id: str = field(default_factory=lambda: str(uuid4()))
     origin_id: str
     destination_h3: str
+    id: str = field(default_factory=lambda: str(uuid4()))
     drone_id: Optional[str] = None
     payload_kg: float = 1.0
     start_time: Optional[float] = None

@@ -1,77 +1,123 @@
 version: '3.8'
 
 services:
-  postgis:
-    image: postgis/postgis:16-3.4
+  db:
+    image: postgis/postgis:15-3.3
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-tiranafly}
+      POSTGRES_DB: tiranafly
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - postgis_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tiranafly_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d tiranafly"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
+    networks:
+      - tiranafly_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
       context: ../..
-      dockerfile: devops/docker/Dockerfile.python
-      target: backend
+      dockerfile: devops/docker/Dockerfile.backend
     environment:
-      POSTGRES_SERVER: postgis
-      REDIS_HOST: redis
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/tiranafly
+      REDIS_URL: redis://redis:6379/0
+      AI_SERVICE_URL: http://ai-service:8001
+      SIMULATION_SERVICE_URL: http://simulation-service:8002
     depends_on:
-      postgis:
+      db:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
+    networks:
+      - tiranafly_network
 
   ai-service:
     build:
       context: ../..
-      dockerfile: devops/docker/Dockerfile.python
-      target: ai-service
-    depends_on:
-      - redis
+      dockerfile: devops/docker/Dockerfile.ai
+    networks:
+      - tiranafly_network
 
   simulation-service:
     build:
       context: ../..
-      dockerfile: devops/docker/Dockerfile.python
-      target: simulation-service
-    depends_on:
-      - redis
+      dockerfile: devops/docker/Dockerfile.simulation
+    networks:
+      - tiranafly_network
 
   worker:
     build:
       context: ../..
-      dockerfile: devops/docker/Dockerfile.python
-      target: worker
+      dockerfile: devops/docker/Dockerfile.worker
     environment:
-      POSTGRES_SERVER: postgis
-      REDIS_HOST: redis
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/tiranafly
+      REDIS_URL: redis://redis:6379/0
     depends_on:
-      - postgis
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - tiranafly_network
 
   frontend:
     build:
       context: ../..
       dockerfile: devops/docker/Dockerfile.frontend
-    ports:
-      - "80:80"
     depends_on:
       - backend
+    networks:
+      - tiranafly_network
+
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./certs:/etc/nginx/certs
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - tiranafly_network
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - tiranafly_network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - tiranafly_network
+
+networks:
+  tiranafly_network:
+    driver: bridge
 
 volumes:
-  postgis_data:
-  redis_data:
+  postgres_data:
+  prometheus_data:
+  grafana_data:

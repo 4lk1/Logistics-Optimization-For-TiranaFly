@@ -28,7 +28,6 @@ class DepotSelector:
         h3_ids = h3_gdf['h3_id'].tolist()
         
         cand_coords = np.array([[g.y, g.x] for g in candidate_gdf.geometry])
-        cand_caps = candidate_gdf.get('capacity', np.full(len(cand_coords), 100000)).values
         
         results = []
 
@@ -40,10 +39,9 @@ class DepotSelector:
         except Exception as e:
             print(f"K-Means failed: {e}")
 
-        # 2. P-Median (Sampled if too many nodes for exact solve)
+        # 2. P-Median
         try:
             pmed = PMedianOptimizer(p=self.config.max_depots)
-            # For demonstration, we use all nodes. In production, we'd sample or use heuristics for N > 500.
             results.append(pmed.optimize(h3_coords, cand_coords, h3_pop))
         except Exception as e:
             print(f"P-Median failed: {e}")
@@ -77,3 +75,29 @@ class DepotSelector:
                 best_result = res
 
         return best_result
+
+class DepotLocationOptimizer:
+    """Legacy wrapper for DepotSelector to support main.py and api routes."""
+    def __init__(self, target_hubs: int = 3):
+        self.target_hubs = target_hubs
+        self.selector = DepotSelector(OptimizationConfig(max_depots=target_hubs))
+
+    def execute_weighted_kmeans(self, cells: List[Any]) -> List[Tuple[float, float]]:
+        coords = np.array([[c.centroid_lat, c.centroid_lon] for c in cells])
+        pops = np.array([getattr(c, 'local_demand_coefficient', 1.0) for c in cells])
+        optimizer = WeightedKMeansOptimizer(n_clusters=self.target_hubs)
+        centroids, _ = optimizer.optimize(coords, pops)
+        return [(c[0], c[1]) for c in centroids]
+
+    def execute_p_median(self, cells: List[Any]) -> List[Tuple[float, float]]:
+        coords = np.array([[c.centroid_lat, c.centroid_lon] for c in cells])
+        pops = np.array([getattr(c, 'local_demand_coefficient', 1.0) for c in cells])
+        optimizer = PMedianOptimizer(p=self.target_hubs)
+        res = optimizer.optimize(coords, coords, pops) # Use cells as candidates too
+        return [(d.lat, d.lng) for d in res.depots]
+
+    def execute_p_center(self, cells: List[Any]) -> List[Tuple[float, float]]:
+        coords = np.array([[c.centroid_lat, c.centroid_lon] for c in cells])
+        optimizer = PCenterOptimizer(p=self.target_hubs)
+        res = optimizer.optimize(coords, coords)
+        return [(d.lat, d.lng) for d in res.depots]

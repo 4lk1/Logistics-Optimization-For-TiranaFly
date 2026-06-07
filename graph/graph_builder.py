@@ -26,7 +26,7 @@ class GraphBuilder:
         # 1. Add H3 Nodes
         for _, row in h3_gdf.iterrows():
             h3_idx = row['h3_id']
-            lat, lng = h3.h3_to_geo(h3_idx)
+            lat, lng = h3.cell_to_latlng(h3_idx)
             node = H3Node(
                 id=h3_idx,
                 h3_index=h3_idx,
@@ -39,7 +39,7 @@ class GraphBuilder:
         # 2. Add Adjacency Edges (k-ring)
         h3_indices = set(h3_gdf['h3_id'])
         for h3_idx in h3_indices:
-            neighbors = h3.k_ring(h3_idx, k_ring)
+            neighbors = h3.grid_disk(h3_idx, k_ring)
             for neighbor in neighbors:
                 if neighbor in h3_indices and neighbor != h3_idx:
                     self._add_h3_edge(h3_idx, neighbor)
