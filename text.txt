@@ -785,14 +785,13 @@ The GIS layer now provides a mathematically and geographically accurate represen
 
 ---
 
-# Transition to Chapter 4
-
 Although GIS provides an accurate representation of the municipality, administrative polygons remain unsuitable for routing and optimization algorithms.
 
 The next challenge is transforming continuous geographic space into a computationally efficient structure capable of supporting graph generation, shortest-path algorithms, facility location optimization, and large-scale simulation.
 
 Chapter 4 introduces the Hexagonal Tessellation Framework, where the Municipality of Tirana is partitioned into a system of non-overlapping hexagonal cells that serve as the fundamental spatial building blocks of the entire TiranaFly platform.
 
+---
 # Chapter 4 — Hexagonal Tessellation Framework and Spatial Discretization
 
 ---
@@ -860,21 +859,7 @@ $${
 h_i \cap h_j = \emptyset
 }$$
 
-for all:
-
-$${
-i \neq j
-}$$
-
-This ensures:
-
-### Complete Coverage
-
-Every geographic location belongs to a cell.
-
-### No Overlap
-
-No location belongs to multiple cells.
+for all: ${i \neq j}$ this ensures complete coverage, every geographic location belongs to a cell. No Overlap, no location belongs to multiple cells.
 
 ### Computational Simplicity
 
@@ -1019,41 +1004,25 @@ This combination makes hexagons the preferred spatial unit in numerous applicati
 
 A regular hexagon consists of six identical equilateral triangles.
 
-Let:
-
-$${
-a
-}$$
-
-denote the side length.
-
-The area of a regular hexagon is:
-
+Let: ${a}$ denote the side length. The area of a regular hexagon is:
 $${
 A_h
 =
 \frac{3\sqrt{3}}{2}a^2
 }$$
-
 The perimeter is:
-
 $${
 P_h = 6a
 }$$
-
 The circumradius equals:
-
 $${
 R=a
 }$$
-
 The inradius equals:
-
 $${
 r=
 \frac{\sqrt{3}}{2}a
 }$$
-
 These properties provide highly regular geometric behavior.
 
 ---
@@ -1690,11 +1659,7 @@ Suppose: $n=1000$ hexagonal cells. A fully connected graph contains: ${n(n-1)=99
 
 # 5.14 NetworkX Implementation
 
-The software implementation uses:
-
-[NetworkX Official Documentation](https://networkx.org/?utm_source=chatgpt.com)
-
-Graph initialization:
+The software implementation uses:[NetworkX Official Documentation](https://networkx.org/?utm_source=chatgpt.com).Graph initialization:
 
 ```python
 import networkx as nx
@@ -1755,22 +1720,6 @@ Having constructed the graph representation of the municipality, the next challe
 This requires the development of shortest-path algorithms, route optimization techniques, and search strategies capable of minimizing distance, energy consumption, and delivery time.
 
 Chapter 6 introduces the Routing and Path Optimization Framework, including Dijkstra's Algorithm, $A^*$ Search, heuristic design, and energy-aware pathfinding methods that power the TiranaFly routing engine.
-
-Excellent. Chapter 6 is where the project becomes a true **Drone Routing Optimization System**.
-
-Up until now we have built:
-
-[
-Population \rightarrow GIS \rightarrow Hexagons \rightarrow Graph
-]
-
-Now we need:
-
-[
-Graph \rightarrow Routes
-]
-
-This chapter explains how drones actually move through the network and why specific routing algorithms were selected.
 
 ---
 
@@ -2307,27 +2256,27 @@ Several competing objectives must be balanced.
 
 ---
 
-## Objective 1 — Minimize Travel Distance
+##### Objective 1 — Minimize Travel Distance
 
 $$\min \sum d_{ij}$$
 
-where: $d_{ij}$ represents distance between depot $j$ and demand cell $i$
+Where: $d_{ij}$ represents distance between depot $j$ and demand cell $i$
 
 ---
 
-## Objective 2 — Maximize Coverage
+##### Objective 2 — Maximize Coverage
 
 Every demand node should be reachable.
 $$Coverage \approx 100\%$$
 ---
 
-## Objective 3 — Minimize Infrastructure Costs
+##### Objective 3 — Minimize Infrastructure Costs
 
 Building depots is expensive. Let: $f_j$ represent the fixed construction cost of depot $j$. Then:
 $$\min \sum f_j$$
 ---
 
-## Objective 4 — Balance Workload
+##### Objective 4 — Balance Workload
 
 Demand should not concentrate excessively at one depot.
 
@@ -2412,17 +2361,9 @@ This minimizes population-weighted travel distance.
 
 ## Constraints
 
-Each demand node must be assigned $\sum_j x_{ij}=1$ for all $i$.
-
----
-
-Assignment only to active depots $x_{ij}\le y_j$
-
----
-
-Exactly $p$ depots $\sum_j y_j=p$
-
----
++ Each demand node must be assigned $\sum_j x_{ij}=1$ for all $i$.
++ Assignment only to active depots $x_{ij}\le y_j$.
++ Exactly $p$ depots $\sum_j y_j=p$
 
 # 7.8 Set Covering Formulation
 
@@ -2493,15 +2434,11 @@ MILP becomes computationally expensive. Therefore TiranaFly uses a two-stage pro
 
 ---
 
-### Stage 1
-
-Population-weighted K-Means clustering.
+##### Stage:  Population-weighted K-Means clustering.
 
 ---
 
-### Stage 2
-
-MILP refinement.
+##### Stage 2: MILP refinement.
 
 ---
 
@@ -2578,15 +2515,11 @@ Coverage
 \sum w_i
 }
 }$$
----
 
 Target: ${Coverage>95\%}$
 
----
-
 Ideal $Coverage\approx100\%$
 
----
 
 # 7.14 Sensitivity Analysis
 
@@ -2901,29 +2834,17 @@ Therefore $c = \frac{\lambda}{\mu}$ must always hold. This represents the minimu
 Demand derives directly from population.
 
 From Chapter 2:
-
-# [  
-w_i
-
+$${w_i
+=
 \frac{P_i}{807029}  
-]
+}$$
 
-Suppose:
-
-[  
-\Lambda  
-]
-
-represents total municipal demand.
-
-Then depot demand becomes:
-
-# [  
+Suppose: $\Lambda$ represents total municipal demand. Then depot demand becomes:
+$${
 \lambda_j
-
+=
 w_j\Lambda  
-]
-
+}$$
 Thus larger populations generate more delivery requests.
 
 ---
@@ -2932,59 +2853,14 @@ Thus larger populations generate more delivery requests.
 
 Assume:
 
-Municipality demand:
+Municipality demand: $\Lambda=600$ deliveries/hour. Suppose Depot A serves 45% of demand.
+Then: ${\lambda_A=270}$ requests/hour.
 
-[  
-\Lambda=600  
-]
+Assume: $\mu=3$ deliveries/hour.
 
-deliveries/hour.
+Then: ${c_A=\frac{270}{3}90}$ drones.
 
-Suppose Depot A serves:
-
-[  
-45%  
-]
-
-of demand.
-
-Then:
-
-# [  
-\lambda_A
-
-270  
-]
-
-requests/hour.
-
-Assume:
-
-[  
-\mu=3  
-]
-
-deliveries/hour.
-
-Then:
-
-[  
-c_A
-
-# \frac{270}{3}
-
-90  
-]
-
-drones.
-
-Therefore:
-
-[  
-c_A=91  
-]
-
-is the minimum stable fleet.
+Therefore: $c_A=91$ is the minimum stable fleet.
 
 ---
 
@@ -2992,70 +2868,25 @@ is the minimum stable fleet.
 
 For an M/M/c system:
 
-Expected queue length:
-
-[  
-L_q  
-]
-
-measures waiting requests.
-
-Higher values indicate congestion.
-
-Lower values indicate efficient operations.
-
-Minimizing:
-
-[  
-L_q  
-]
-
-is a primary objective.
+Expected queue length $L_q$ measures waiting requests. Higher values indicate congestion. Lower values indicate efficient operations. Minimizing $L_q$ is a primary objective.
 
 ---
 
 # 8.12 Average Waiting Time
 
-Using Little's Law:
+Using Little's Law: $L=\lambda W$ where:
 
-[  
-L=\lambda W  
-]
-
-where:
-
-- (L) = average customers in system
+- $(L)$ = average customers in system
     
-- (W) = average waiting time
-    
+- $(W)$ = average waiting time
 
-Therefore:
-
-# [  
-W
-
-\frac{L}{\lambda}  
-]
+Therefore: ${W=\frac{L}{\lambda}}$
 
 ---
 
 ## Operational Interpretation
 
-A depot with:
-
-[  
-W=2  
-]
-
-minutes performs well.
-
-A depot with:
-
-[  
-W=30  
-]
-
-minutes requires additional drones.
+A depot with $W=2$ minutes performs well. A depot with $W=30$ minutes requires additional drones.
 
 ---
 
@@ -3063,12 +2894,12 @@ minutes requires additional drones.
 
 TiranaFly adopts the following targets.
 
-|Metric|Target|
-|---|---|
-|Queue Utilization|< 0.85|
-|Average Wait|< 5 min|
-|Coverage|> 95%|
-|On-Time Deliveries|> 98%|
+| Metric             | Target  |
+| ------------------ | ------- |
+| Queue Utilization  | < 0.85  |
+| Average Wait       | < 5 min |
+| Coverage           | > 95%   |
+| On-Time Deliveries | > 98%   |
 
 These become operational constraints.
 
@@ -3076,29 +2907,16 @@ These become operational constraints.
 
 # 8.14 Dynamic Fleet Allocation
 
-Demand varies throughout the day.
-
-Therefore fleet allocation should adapt dynamically.
-
-Let:
-
-[  
-\lambda_j(t)  
-]
-
-represent time-dependent demand.
-
-Then:
-
-# [  
+Demand varies throughout the day. Therefore fleet allocation should adapt dynamically.
+Let: $\lambda_j(t)$ represent time-dependent demand. Then:
+$${  
 c_j(t)
-
+=
 \left\lceil  
 \frac{\lambda_j(t)}  
 {\mu}  
 \right\rceil  
-]
-
+}$$
 This allows flexible deployment.
 
 ---
@@ -3109,33 +2927,10 @@ Three demand regimes are evaluated.
 
 ---
 
-## Normal Demand
+##### Normal Demand: 100% baseline demand.
+##### High Demand: 125% holiday season demand.
 
-[  
-100%  
-]
-
-baseline demand.
-
----
-
-## High Demand
-
-[  
-125%  
-]
-
-holiday season demand.
-
----
-
-## Extreme Demand
-
-[  
-150%  
-]
-
-Black Friday demand.
+##### Extreme Demand: 150% Black Friday demand.
 
 ---
 
@@ -3146,39 +2941,15 @@ The system must remain stable under all scenarios.
 # 8.16 Drone Utilization
 
 Utilization is:
-
-# [  
+$${ 
 U
-
+=
 \rho \times 100%  
-]
+}$$
 
----
-
-Ideal range:
-
-[  
-70%  
-\le U \le 85%  
-]
-
----
-
-Too Low
-
-[  
-U<50%  
-]
-
-indicates wasted resources.
-
----
-
-Too High
-
-[  
-U>90%  
-]
++ Ideal range:${70\%\le U \le 85\%}$
++ Too Low: $U<50\%$ indicates wasted resources.
++ Too High $U>90\%$
 
 indicates overload risk.
 
@@ -3186,66 +2957,13 @@ indicates overload risk.
 
 # 8.17 Battery Swapping Operations
 
-Drone turnaround includes battery replacement.
-
-Let:
-
-[  
-T_{swap}  
-]
-
-represent battery exchange time.
-
-For TiranaFly:
-
-# [  
-T_{swap}
-
-3\text{ minutes}  
-]
-
-Service time becomes:
-
-# [  
-T_s
-
-T_{flight}  
-+  
-T_{swap}  
-]
-
-This directly affects:
-
-[  
-\mu  
-]
-
-and therefore fleet size.
+Drone turnaround includes battery replacement. Let: $T_{swap}$ represent battery exchange time. For TiranaFly: ${T_{swap}=3\text{ minutes}}$. Service time becomes ${T_s=T_{flight}+T_{swap}}$. This directly affects $\mu$ land therefore fleet size.
 
 ---
 
 # 8.18 Fleet Optimization Objective
 
-The fleet sizing problem becomes:
-
-[  
-\min  
-\sum_j c_j  
-]
-
-subject to:
-
-[  
-\rho_j < 0.85  
-]
-
-and
-
-[  
-Coverage > 95%  
-]
-
-This minimizes fleet cost while preserving service quality.
+The fleet sizing problem becomes: ${\min  \sum_j c_j}$ subject to: $\rho_j < 0.85$ and Coverage > 95%. This minimizes fleet cost while preserving service quality.
 
 ---
 
@@ -3316,7 +3034,6 @@ At this point the TiranaFly framework can answer:
 - How drones move through the network.
     
 - How many drones are required.
-    
 
 The next challenge is evaluating whether drones can physically complete the assigned missions.
 
@@ -3331,7 +3048,6 @@ This requires detailed modeling of:
 - Range limitations
     
 - Energy optimization
-    
 
 Chapter 9 develops the UAV Energy Consumption and Battery Modeling Framework, transforming the project from a logistics network into a physically realistic drone delivery system.
 
@@ -3358,7 +3074,6 @@ Battery capacity directly determines:
 - Fleet productivity
     
 - Operating costs
-    
 
 Therefore energy modeling becomes one of the most important constraints in the TiranaFly optimization framework.
 
@@ -3370,48 +3085,13 @@ The objective of this chapter is to construct a realistic mathematical model of 
 
 Every delivery mission consumes energy.
 
-For a flight:
-
-[  
-F=(v_1,v_2,\ldots,v_n)  
-]
-
-the total energy required is
-
-# [  
-E_{total}
-
-\sum_{i=1}^{n-1}  
-E_i  
-]
-
-where
-
-[  
-E_i  
-]
-
-represents energy consumed along segment
-
-[  
-(v_i,v_{i+1})  
-]
-
-A mission is feasible only if
-
-[  
+For a flight: $F=(v_1,v_2,\ldots,v_n)$ the total energy required is: $E_{total}=\sum_{i=1}^{n-1}  E_i$ where $E_i$
+represents energy consumed along segment $(v_i,v_{i+1})$. A mission is feasible only if:
+$${
 E_{total}  
 \le  
-B_{usable}  
-]
-
-where
-
-[  
-B_{usable}  
-]
-
-represents usable battery capacity.
+B_{usable}}$$
+where $B_{usable}$ represents usable battery capacity.
 
 ---
 
@@ -3430,26 +3110,15 @@ Assumed specifications:
 |Battery Safety Reserve|20%|
 |Maximum Operational Range|24 km|
 
-Only
-
-[  
-80%  
-]
-
-of battery capacity is considered usable.
-
-Thus
-
-# [  
-B_{usable}
-
-# 0.8  
+Only 80% of battery capacity is considered usable. Thus
+$${B_{usable}
+=
+ 0.8  
 \times  
 1200
-
+=
 960Wh  
-]
-
+}$$
 ---
 
 # 9.4 Energy Consumption Components
@@ -3477,7 +3146,6 @@ Includes:
 - Sensors
     
 - Communications
-    
 
 ---
 
@@ -3496,15 +3164,13 @@ Includes:
 - Temperature
     
 - Air density
-    
 
 ---
 
 Total energy becomes:
-
-# [  
+$${
 E_{total}
-
+=
 E_{propulsion}  
 +  
 E_{avionics}  
@@ -3512,169 +3178,49 @@ E_{avionics}
 E_{payload}  
 +  
 E_{environment}  
-]
+}$$
 
 ---
 
 # 9.5 Flight Time Model
 
-Let
-
-[  
-d  
-]
-
-represent route distance.
-
-Let
-
-[  
-v  
-]
-
-represent average speed.
-
-Flight duration becomes
-
-# [  
-t
-
+Let d represent route distance. Let v represent average speed. Flight duration becomes:   
+$${t
+=
 \frac{d}{v}  
-]
+}$$
 
 ---
-
 ## Example
 
-Distance:
+Distance: $d=12km$ 
 
-[  
-d=12km  
-]
+Speed: $v=15m/s$  
 
-Speed:
+Converting: $15m/s=54km/h$
 
-[  
-v=15m/s  
-]
-
-Converting:
-
-# [  
-15m/s
-
-54km/h  
-]
-
-Therefore
-
-# [  
-t
-
-# \frac{12}{54}
-
-0.222h  
-]
-
-or
-
-[  
-13.3min  
-]
+Therefore $t=\frac{12}{54} = 0.222h$ or $13.3min$ 
 
 ---
 
 # 9.6 Payload Impact Model
 
-Payload mass significantly affects energy requirements.
-
-Let
-
-[  
-m_e  
-]
-
-represent empty drone mass.
-
-Let
-
-[  
-m_p  
-]
-
-represent payload mass.
-
-Total mass becomes
-
-# [  
-m
-
-m_e+m_p  
-]
-
-The TiranaFly model assumes:
-
-[  
-E  
-\propto m  
-]
-
-Therefore
-
-# [  
-E
-
-kmd  
-]
-
-where
-
-[  
-k  
-]
-
-is an experimentally determined coefficient.
-
-This linear approximation is commonly used in UAV logistics studies.
+Payload mass significantly affects energy requirements. Let $m_e$ represent empty drone mass. Let $m_p$ represent payload mass.
+Total mass becomes: $m=m_e+m_p$. The TiranaFly model assumes: $E  \propto m$. Therefore $E=kmd$ where $k$ is an experimentally determined coefficient. This linear approximation is commonly used in UAV logistics studies.
 
 ---
 
 # 9.7 Aerodynamic Energy Model
 
 A more detailed model incorporates flight duration.
+$$E=P \times t$$
 
-# [  
+where $P$ represents average power draw. Substituting:$$t=\frac{d}{v}$$gives$$ 
 E
-
-P  
-\times  
-t  
-]
-
-where
-
-[  
-P  
-]
-
-represents average power draw.
-
-Substituting:
-
-# [  
-t
-
-\frac{d}{v}  
-]
-
-gives
-
-# [  
-E
-
+=
 P  
 \frac{d}{v}  
-]
+$$
 
 This establishes direct dependence on:
 
@@ -3683,17 +3229,14 @@ This establishes direct dependence on:
 - Velocity
     
 - Power demand
-    
 
 ---
 
 # 9.8 TiranaFly Operational Energy Equation
 
-Combining payload and power effects:
-
-# [  
+Combining payload and power effects:$$  
 E_{ij}
-
+=
 \left[  
 (m_e+m_p)  
 g  
@@ -3703,19 +3246,18 @@ g
 +  
 \epsilon  
 \frac{d_{ij}}{v}  
-]
-
+$$
 where:
 
-|Symbol|Meaning|
-|---|---|
-|(m_e)|Empty mass|
-|(m_p)|Payload|
-|(g)|Gravity|
-|(\eta)|Propulsion efficiency|
-|(d_{ij})|Route distance|
-|(v)|Velocity|
-|(\epsilon)|Avionics power|
+| Symbol     | Meaning               |
+| ---------- | --------------------- |
+| (m_e)      | Empty mass            |
+| (m_p)      | Payload               |
+| (g)        | Gravity               |
+| (\eta)     | Propulsion efficiency |
+| (d_{ij})   | Route distance        |
+| (v)        | Velocity              |
+| (\epsilon) | Avionics power        |
 
 This equation is used throughout the optimization framework.
 
@@ -3727,28 +3269,12 @@ Professional UAV systems never allow full battery depletion.
 
 A safety reserve is mandatory.
 
-Let:
-
-[  
-R  
-]
-
-denote reserve percentage.
-
-TiranaFly uses:
-
-[  
-R=20%  
-]
-
-Mission feasibility requires:
-
-[  
+Let $R$ denote reserve percentage. TiranaFly uses: $R$=20%. Mission feasibility requires:
+$$  
 E_{mission}  
 \le  
-(1-R)B  
-]
-
+(1-R)B
+$$
 This prevents emergency battery failures.
 
 ---
@@ -3762,46 +3288,29 @@ A delivery mission requires:
 2. Delivery
     
 3. Return flight
-    
 
-Therefore:
-
-# [  
+Therefore:$$
 E_{round}
-
-2E_{outbound}  
-]
-
+=
+2E_{outbound}$$
 must satisfy:
-
-[  
+$$
 E_{round}  
 \le  
 B_{usable}  
-]
-
+$$
 This condition directly determines maximum delivery radius.
 
 ---
 
 # 9.11 Maximum Range Estimation
 
-Let
-
-[  
-e  
-]
-
-represent energy consumed per kilometer.
-
-Maximum safe range becomes
-
-# [  
+Let $e$ represent energy consumed per kilometer. Maximum safe range becomes
+$$
 R_{max}
-
+=
 \frac{B_{usable}}  
-{2e}  
-]
+{2e}  $$
 
 The factor 2 accounts for return travel.
 
@@ -3809,29 +3318,7 @@ The factor 2 accounts for return travel.
 
 ## Example
 
-Assume:
-
-[  
-B_{usable}=960Wh  
-]
-
-and
-
-[  
-e=20Wh/km  
-]
-
-Then:
-
-# [  
-R_{max}
-
-# \frac{960}{40}
-
-24km  
-]
-
-which matches the system design specification.
+Assume: $B_{usable}=960Wh$ and $e=20Wh/km$. Then $R_{max}=\frac{960}{40}=24km$ which matches the system design specification.
 
 ---
 
@@ -3848,75 +3335,17 @@ Regions such as:
 - Dajt
     
 - Zall Bastar
-    
 
-contain mountainous terrain.
+contain mountainous terrain. Climbing requires additional energy.
 
-Climbing requires additional energy.
-
-Let:
-
-[  
-\Delta h  
-]
-
-represent altitude gain.
-
-Potential energy required is
-
-# [  
-E_h
-
-mg\Delta h  
-]
-
-The total route energy becomes
-
-# [  
-E
-
-E_{horizontal}  
-+  
-E_h  
-]
+Let $\Delta h$ represent altitude gain. Potential energy required is $E_h=mg\Delta h$
+The total route energy becomes $E=E_{horizontal}+E_h$
 
 ---
 
 # 9.13 Wind Effects
 
-Wind strongly influences drone performance.
-
-Tailwinds reduce energy.
-
-Headwinds increase energy.
-
-Let:
-
-[  
-v_w  
-]
-
-represent wind speed.
-
-Effective velocity becomes
-
-# [  
-v_{eff}
-
-v-v_w  
-]
-
-The energy equation becomes
-
-# [  
-E
-
-P  
-\frac{d}  
-{v_{eff}}  
-]
-
-showing increased consumption under adverse weather.
+Wind strongly influences drone performance. Tailwinds reduce energy. Headwinds increase energy. Let $v_w$ represent wind speed. Effective velocity becomes $v_{eff}=v-v_w$. The energy equation becomes $E=P\frac{d}{v_{eff}}$ showing increased consumption under adverse weather.
 
 ---
 
@@ -3926,44 +3355,20 @@ Lithium batteries lose performance in cold conditions.
 
 Empirical studies show:
 
-|Temperature|Capacity Reduction|
-|---|---|
-|20°C|0%|
-|10°C|5%|
-|0°C|15%|
-|-10°C|25%|
+| Temperature | Capacity Reduction |
+| ----------- | ------------------ |
+| 20°C        | 0%                 |
+| 10°C        | 5%                 |
+| 0°C         | 15%                |
+| -10°C       | 25%                |
 
-Therefore:
-
-[  
-B_{usable}  
-]
-
-must be adjusted seasonally.
+Therefore $B_{usable}$ must be adjusted seasonally.
 
 ---
 
 # 9.15 Energy-Aware Routing
 
-The routing chapter minimized:
-
-[  
-w_{ij}  
-]
-
-Edge weights can now be defined as
-
-# [  
-w_{ij}
-
-E_{ij}  
-]
-
-instead of distance.
-
-Consequently Dijkstra and A* become energy optimization algorithms.
-
-The resulting route minimizes battery consumption rather than geometric length.
+The routing chapter minimized: $w_{ij}$ Edge weights can now be defined as $w_{ij}=E_{ij}$ instead of distance. Consequently Dijkstra and A* become energy optimization algorithms. The resulting route minimizes battery consumption rather than geometric length.
 
 ---
 
@@ -3972,12 +3377,11 @@ The resulting route minimizes battery consumption rather than geometric length.
 Unlike electric vehicles, drones can rapidly exchange batteries.
 
 TiranaFly assumes:
-
-# [  
+$$ 
 T_{swap}
-
+=
 3min  
-]
+$$
 
 Advantages:
 
@@ -3986,7 +3390,6 @@ Advantages:
 - Reduced charging downtime
     
 - Improved fleet utilization
-    
 
 Battery swap stations therefore become critical depot infrastructure.
 
@@ -3994,13 +3397,7 @@ Battery swap stations therefore become critical depot infrastructure.
 
 # 9.17 Energy Feasibility Test
 
-Every route must satisfy:
-
-[  
-Energy(Route)  
-\le  
-BatteryCapacity  
-]
+Every route must satisfy: $Energy(Route) \le BatteryCapacity$
 
 Algorithmically:
 
@@ -4063,7 +3460,6 @@ This chapter established:
 8. Battery swapping operations.
     
 9. Energy-aware routing.
-    
 
 These components ensure that every route generated by TiranaFly is physically achievable.
 
@@ -4089,8 +3485,7 @@ Chapter 10 introduces the complete software architecture of TiranaFly, including
     
 - Optimization pipeline
     
-- Simulation workflow
-    
+- Simulation workflowz
 
 This chapter bridges the gap between mathematical theory and deployable software engineering.
 
@@ -6378,12 +5773,6 @@ Most importantly, the project demonstrates how interdisciplinary mathematical an
 TiranaFly is therefore not merely a theoretical exercise but a practical blueprint for the future development of intelligent aerial logistics systems in Albania and beyond.
 
 ---
-
-
-Absolutely. In a project of this scope, the appendices should not be treated as "extra material." They are where you prove that the implementation is rigorous, reproducible, and mathematically justified.
-
-I would structure them as follows:
-
 # Appendix A — Official Demographic Dataset and Data Validation
 
 This appendix formally documents every dataset used in the project.
@@ -6428,54 +5817,24 @@ The database provides official population statistics for all fourteen administra
 
 # A.3 Population Validation
 
-The total population used throughout the thesis is:
-
-[
-P_{Total}
-=========
-
-\sum_{i=1}^{14} P_i
-]
-
-[
-P_{Total}
-=========
-
-807,029
-]
-
+The total population used throughout the thesis is: $$P_{Total}=\sum_{i=1}^{14} P_i$$
+$$P_{Total}=807,029$$
 ---
 
 # A.4 Denominator Consistency Verification
 
-A common error is assuming:
-
-[
-P_{Total}=598,176
-]
-
-which is actually only the population of the administrative unit Tiranë.
-
-The project corrects this by using:
-
-[
-P_{Total}=807,029
-]
-
-for all demand calculations.
+A common error is assuming $P_{Total}=598,176$ which is actually only the population of the administrative unit Tiranë. The project corrects this by using $P_{Total}=807,029$ for all demand calculations.
 
 ---
 
 # A.5 Demand Weight Table
 
 For each administrative unit:
-
-[
+$$
 D_i
-===
-
+=
 \frac{P_i}{807029}
-]
+$$
 
 The resulting weights are:
 
@@ -6500,23 +5859,7 @@ The resulting weights are:
 
 # A.6 Population Distribution Analysis
 
-The demographic structure reveals a highly centralized municipality.
-
-Tiranë alone accounts for:
-
-[
-74.12%
-]
-
-of total population.
-
-The remaining thirteen administrative units account for:
-
-[
-25.88%
-]
-
-of total population.
+The demographic structure reveals a highly centralized municipality. Tiranë alone accounts for: 74.12% of total population.The remaining thirteen administrative units account for 25.88% of total population.
 
 This justifies:
 
@@ -6532,13 +5875,7 @@ The following validation checks were implemented:
 
 ### Check 1
 
-Population positivity
-
-[
-P_i > 0
-]
-
-for all units.
+Population positivity $P_i > 0$ for all units.
 
 ---
 
@@ -6556,27 +5893,13 @@ No missing values.
 
 ### Check 4
 
-Population summation verification.
-
-[
-\sum P_i
-========
-
-807029
-]
+Population summation verification: $\sum P_i=807029$
 
 ---
 
 ### Check 5
 
-Demand normalization verification.
-
-[
-\sum D_i
-========
-
-1
-]
+Demand normalization verification: $\sum D_i=1$
 
 ---
 
@@ -6670,151 +5993,64 @@ Among these, the regular hexagon provides the most circle-like structure.
 
 A regular hexagon can be decomposed into six equilateral triangles.
 
-If:
-
-[
-s
-]
-
-is the side length,
-
-the area of one equilateral triangle is:
-
-[
+If $s$ is the side length, the area of one equilateral triangle is:$$
 A_t
-===
-
+=
 \frac{\sqrt3}{4}s^2
-]
+$$Therefore: $A_h=6A_t$
 
-Therefore:
-
-[
+$$
 A_h
-===
-
-6A_t
-]
-
-[
-A_h
-===
+=
 
 6
 \left(
 \frac{\sqrt3}{4}s^2
 \right)
-]
-
-[
+$$
+$$
 A_h
-===
+=
 
 \frac{3\sqrt3}{2}s^2
-]
+$$
 
 ---
 
 ### Final Formula
-
-A_h=\frac{3\sqrt{3}}{2}s^2
+$$A_h=\frac{3\sqrt{3}}{2}s^2$$
 
 ---
 
 ## B.2.3 Hexagon Perimeter
 
-The perimeter is:
-
-[
-P_h
-===
-
-6s
-]
+The perimeter is $P_h=6s$
 
 ---
 
 ## B.2.4 Compactness Ratio
 
-The compactness ratio is:
-
-[
-C
-=
-
-\frac{4\pi A}{P^2}
-]
-
-For a regular hexagon:
-
-[
-C
-=
-
-0.907
-]
-
-For a square:
-
-[
-C
-=
-
-0.785
-]
-
+The compactness ratio is $C=\frac{4\pi A}{P^2}$. For a regular hexagon: $C=0.907$. For a square: $C=0.785$
 Thus hexagons are significantly closer to circles.
 
 ---
 
 # B.3 Hexagonal Neighbor Structure
 
-Each hexagon has exactly six neighbors.
-
-The graph degree is:
-
-[
-deg(v)=6
-]
-
-for interior cells.
-
-This property creates isotropic movement.
+Each hexagon has exactly six neighbors. The graph degree is $deg(v)=6$ for interior cells. This property creates isotropic movement.
 
 ---
 
 ## Square Grid Problem
 
-Diagonal distance:
-
-[
-d_{diag}
-========
-
-\sqrt2 d
-]
-
-while orthogonal distance:
-
-[
-d_{orth}
-========
-
-d
-]
-
-This introduces directional bias.
+Diagonal distance: $d_{diag}=\sqrt2 d$ while orthogonal distance: $d_{orth}=d$. This introduces directional bias.
 
 ---
 
 ## Hexagonal Grid
 
 All neighboring centers are equidistant.
-
-[
-d_1=d_2=d_3=d_4=d_5=d_6
-]
-
+$$d_1=d_2=d_3=d_4=d_5=d_6$$
 This eliminates directional preference.
 
 ---
@@ -6829,49 +6065,22 @@ The TiranaFly framework uses the Haversine formula.
 
 # B.4.1 Great Circle Distance
 
-Consider two points:
+Consider two points: $(\phi_1,\lambda_1)$ and $(\phi_2,\lambda_2)$ where:
 
-[
-(\phi_1,\lambda_1)
-]
-
-and
-
-[
-(\phi_2,\lambda_2)
-]
-
-where:
-
-* (\phi) = latitude
-* (\lambda) = longitude
+* $(\phi)$ = latitude
+* $(\lambda)$ = longitude
 
 ---
 
-Define:
-
-[
-\Delta\phi
-==========
-
-\phi_2-\phi_1
-]
-
-[
-\Delta\lambda
-=============
-
-\lambda_2-\lambda_1
-]
+Define: $$\Delta\phi=\phi_2-\phi_1$$
+$$
+\Delta\lambda=\lambda_2-\lambda_1$$
 
 ---
 
 The Haversine expression becomes:
-
-[
-a
+$$a
 =
-
 \sin^2
 \left(
 \frac{\Delta\phi}{2}
@@ -6883,35 +6092,23 @@ a
 \left(
 \frac{\Delta\lambda}{2}
 \right)
-]
+$$
 
 ---
 
 The angular distance is:
-
-[
-c
+$$c
 =
-
 2
 \arctan
 \left(
 \frac{\sqrt a}
 {\sqrt{1-a}}
 \right)
-]
-
+$$
 ---
 
-Distance:
-
-d=Rc
-
-where:
-
-[
-R=6371km
-]
+Distance $d=Rc$ where $R=6371km$
 
 ---
 
@@ -6921,21 +6118,17 @@ R=6371km
 
 ## B.5.1 Graph Definition
 
-The TiranaFly network is represented by:
+The TiranaFly network is represented by $G=(V,E,W)$ where:
 
-G=(V,E,W)
-
-where:
-
-* (V) = vertices
-* (E) = edges
-* (W) = edge weights
+* $(V)$ = vertices
+* $(E)$ = edges
+* $(W)$ = edge weights
 
 ---
 
 ## B.5.2 Vertex Partition
 
-[
+$$
 V
 =
 
@@ -6944,9 +6137,7 @@ V_D
 V_C
 \cup
 V_H
-]
-
-where:
+$$where:
 
 * Depot nodes
 * Customer nodes
@@ -6956,29 +6147,17 @@ where:
 
 ## B.5.3 Adjacency Matrix
 
-For graph:
+For graph $G=(V,E)$ the adjacency matrix $A=[a_{ij}]$ is defined as:
 
-[
-G=(V,E)
-]
-
-the adjacency matrix:
-
-[
-A=[a_{ij}]
-]
-
-is defined as:
-
-[
+$$
 a_{ij}
-======
+=
 
 \begin{cases}
 1 & \text{if edge exists}\
-0 & \text{otherwise}
+\\0 & \text{otherwise}
 \end{cases}
-]
+$$
 
 ---
 
@@ -6988,52 +6167,25 @@ a_{ij}
 
 ## Objective
 
-Find:
-
-[
-ShortestPath(s,t)
-]
+Find: $ShortestPath(s,t)$
 
 ---
 
 ## Principle
 
-At every iteration:
-
-Choose the unvisited node with minimum distance estimate.
+At every iteration: Choose the unvisited node with minimum distance estimate.
 
 ---
 
 ## Bellman Optimality Condition
 
-If:
-
-[
-P^*
-===
-
-(v_1,v_2,...,v_k)
-]
-
-is optimal,
-
-then every subpath:
-
-[
-(v_i,...,v_j)
-]
-
-must also be optimal.
+If $P^*=(v_1,v_2,...,v_k)$ is optimal, then every subpath: $(v_i,...,v_j)$ must also be optimal.
 
 ---
 
 ## Complexity
 
-Binary Heap:
-
-[
-O((V+E)\log V)
-]
+Binary Heap: $O((V+E)\log V)$
 
 ---
 
@@ -7043,65 +6195,19 @@ A* extends Dijkstra using a heuristic.
 
 ---
 
-Define:
-
-[
-f(n)
-====
-
-g(n)+h(n)
-]
-
-where:
-
-[
-g(n)
-====
-
-actual\ cost
-]
-
-[
-h(n)
-====
-
-estimated\ remaining\ cost
-]
+Define: $f(n)=g(n)+h(n)$ where $g(n) =actual\ cost$ and $h(n)=estimated\ remaining\ cost$
 
 ---
 
-For geographic routing:
-
-[
-h(n)
-====
-
-Haversine(n,goal)
-]
+For geographic routing: $h(n)=Haversine(n,goal)$
 
 ---
 
 ## Admissibility
 
-A heuristic is admissible if:
+A heuristic is admissible if:$h(n)\le h^*(n)$
 
-[
-h(n)
-\le
-h^*(n)
-]
-
-Since straight-line distance never exceeds the shortest route distance:
-
-[
-h(n)
-]
-
-is admissible.
-
-Therefore:
-
-A* remains optimal.
+Since straight-line distance never exceeds the shortest route distance $h(n)$ is admissible. Therefore A* remains optimal.
 
 ---
 
@@ -7112,39 +6218,21 @@ The entire demand system originates from demographic distributions.
 ---
 
 For administrative unit (i):
-
-[
+$$
 P_i
-===
-
-population
-]
-
-Total:
-
-[
-P
 =
-
-807029
-]
+population
+$$
+Total $P= 807029$
 
 ---
 
-Demand coefficient:
-
-D_i=\frac{P_i}{P}
+Demand coefficient: $D_i=\frac{P_i}{P}$
 
 ---
 
 Normalization proof:
-
-[
-\sum_i D_i
-==========
-
-1
-]
+$$\sum_i D_i=1$$
 
 ---
 
@@ -7509,12 +6597,6 @@ These derivations provide the mathematical foundation upon which the entire Tira
 
 Excellent. At this point your thesis is moving from the mathematical foundations into what many professors in Computer Science, Software Engineering, Applied Mathematics, and Operations Research consider the most important section:
 
-# Appendix C — Complete Software Engineering Architecture and Implementation Documentation
-
-This appendix explains how every mathematical model presented in the previous chapters is translated into an operational software platform.
-
----
-
 # Appendix C
 
 # Complete Software Engineering Architecture and Implementation Documentation
@@ -7542,37 +6624,30 @@ The objective of the TiranaFly software platform is to transform theoretical opt
 - Generating visualizations
     
 - Performing scenario analysis
-    
 
-The software acts as a Digital Twin of the proposed UAV logistics network.
+The software acts as a **Digital Twin** of the proposed UAV logistics network.
 
 ---
 
 # C.2 Software Design Philosophy
 
-The system follows five fundamental engineering principles:
+The system follows five fundamental engineering principles.
 
-### Modularity
+## Modularity
 
 Every subsystem is isolated.
 
 Example:
 
 ```text
-Optimization
-≠
-Routing
-≠
-Visualization
-≠
-Data Loading
+Optimization ≠ Routing ≠ Visualization ≠ Data Loading
 ```
 
-This minimizes coupling.
+This minimizes coupling and improves maintainability.
 
 ---
 
-### Reproducibility
+## Reproducibility
 
 All experiments must generate identical results.
 
@@ -7586,7 +6661,7 @@ is enforced globally.
 
 ---
 
-### Scalability
+## Scalability
 
 The framework must support:
 
@@ -7595,35 +6670,30 @@ The framework must support:
 - 100+ units tomorrow
     
 - Entire Albania later
-    
 
-without architectural changes.
+without architectural modifications.
 
 ---
 
-### Maintainability
+## Maintainability
 
-Every component must be replaceable independently.
-
-Example:
-
-Current:
+Every component must be replaceable independently. Example: Current implementation:
 
 ```python
 Dijkstra
 ```
 
-Future:
+Future implementation:
 
 ```python
 A*
 ```
 
-without modifying the rest of the system.
+without affecting the remainder of the system.
 
 ---
 
-### Extensibility
+## Extensibility
 
 Future additions may include:
 
@@ -7636,7 +6706,6 @@ Future additions may include:
 - Dynamic routing
     
 - Machine learning demand forecasting
-    
 
 ---
 
@@ -7645,24 +6714,38 @@ Future additions may include:
 The complete architecture is organized as follows:
 
 ```text
-                 USER
-                   │
-                   ▼
-        ┌─────────────────────┐
-        │   Main Controller   │
-        └─────────────────────┘
-                   │
- ┌─────────────────┼─────────────────┐
- ▼                 ▼                 ▼
-
-Data Layer    Optimization      Visualization
-                Layer              Layer
-
- ▼                 ▼                 ▼
-
-GIS Layer      Routing Layer   Reporting Layer
-
+					                 USER
+					                   │
+					                   ▼
+					        ┌─────────────────────┐
+					        │   Main Controller   │
+					        └─────────────────────┘
+					                   │
+					 ┌─────────────────┼─────────────────┐
+					 ▼                 ▼                 ▼
+				  Data Layer    Optimization      Visualization
+					                Layer              Layer
+					 ▼                 ▼                 ▼
+				GIS Layer      Routing Layer   Reporting Layer
 ```
+
+---
+
+## Architectural Overview
+
+The architecture separates responsibilities into independent layers.
+
+Benefits include:
+
+- Reduced complexity
+    
+- Improved testing
+    
+- Easier deployment
+    
+- Greater scalability
+    
+- Enhanced code reuse
 
 ---
 
@@ -7674,7 +6757,7 @@ The platform follows a six-layer architecture.
 
 ## Layer 1: Data Layer
 
-Responsible for:
+### Responsibilities
 
 - Census ingestion
     
@@ -7683,9 +6766,8 @@ Responsible for:
 - Cleaning
     
 - Transformation
-    
 
-Input:
+### Input Formats
 
 ```text
 CSV
@@ -7694,17 +6776,24 @@ GeoJSON
 Shapefile
 ```
 
-Output:
+### Output
 
 ```python
 Pandas DataFrames
+```
+
+### Primary Libraries
+
+```python
+pandas
+numpy
 ```
 
 ---
 
 ## Layer 2: GIS Layer
 
-Responsible for:
+### Responsibilities
 
 - Geographic boundaries
     
@@ -7713,9 +6802,8 @@ Responsible for:
 - Spatial indexing
     
 - Hexagonal tessellation
-    
 
-Libraries:
+### Libraries
 
 ```python
 geopandas
@@ -7723,20 +6811,27 @@ shapely
 h3
 ```
 
+### Outputs
+
+- Administrative polygons
+    
+- Hexagonal cells
+    
+- Spatial relationships
+
 ---
 
 ## Layer 3: Optimization Layer
 
-Responsible for:
+### Responsibilities
 
 - Depot placement
     
 - Demand allocation
     
-- Facility location
-    
+- Facility location optimization
 
-Libraries:
+### Libraries
 
 ```python
 scikit-learn
@@ -7744,30 +6839,45 @@ PuLP
 OR-Tools
 ```
 
+### Outputs
+
+- Depot coordinates
+    
+- Cluster assignments
+    
+- Facility placement solutions
+
 ---
 
 ## Layer 4: Routing Layer
 
-Responsible for:
+### Responsibilities
 
 - Graph creation
     
 - Edge pruning
     
 - Shortest path computation
-    
 
-Libraries:
+### Libraries
 
 ```python
 networkx
 ```
 
+### Outputs
+
+- Flight routes
+    
+- Route costs
+    
+- Network statistics
+
 ---
 
 ## Layer 5: Simulation Layer
 
-Responsible for:
+### Responsibilities
 
 - Fleet sizing
     
@@ -7775,8 +6885,9 @@ Responsible for:
     
 - Sensitivity analysis
     
+- Scenario evaluation
 
-Libraries:
+### Libraries
 
 ```python
 numpy
@@ -7788,16 +6899,17 @@ simpy
 
 ## Layer 6: Presentation Layer
 
-Responsible for:
+### Responsibilities
 
 - Maps
     
 - Charts
     
-- Reports
+- Dashboards
     
+- Reports
 
-Libraries:
+### Libraries
 
 ```python
 matplotlib
@@ -7828,17 +6940,105 @@ tiranafly/
 
 ---
 
-# C.6 Data Module
+## Directory Descriptions
+
+### data/
+
+Stores:
+
+- Population datasets
+    
+- Census files
+    
+- Administrative data
+    
+- Input datasets
 
 ---
+
+### gis/
+
+Contains:
+
+- Boundary processing
+    
+- Hexagonal tessellation
+    
+- Spatial joins
+    
+- GIS utilities
+
+---
+
+### optimization/
+
+Contains:
+
+- K-Means algorithms
+    
+- p-Median models
+    
+- MILP formulations
+
+---
+
+### routing/
+
+Contains:
+
+- Graph generation
+    
+- Dijkstra implementation
+    
+- Future A* implementation
+
+---
+
+### simulation/
+
+Contains:
+
+- Fleet simulation
+    
+- Queueing models
+    
+- Monte Carlo experiments
+
+---
+
+### visualization/
+
+Contains:
+
+- Mapping functions
+    
+- Statistical plots
+    
+- Dashboard components
+
+---
+
+### tests/
+
+Contains:
+
+- Unit tests
+    
+- Integration tests
+    
+- Validation scripts
+
+---
+
+# C.6 Data Module
 
 ## Purpose
 
-Stores all census information.
+Stores and processes all census information used throughout the system.
 
 ---
 
-### census_loader.py
+## census_loader.py
 
 Responsibilities:
 
@@ -7852,140 +7052,187 @@ compute_weights()
 
 ---
 
-### Data Validation Pipeline
+## Data Validation Pipeline
 
-Step 1
-
-Check missing values.
+### Step 1: Missing Value Detection
 
 ```python
 df.isnull()
 ```
 
+Purpose:
+
+- Detect incomplete records
+    
+- Prevent optimization errors
+
 ---
 
-Step 2
-
-Check duplicates.
+### Step 2: Duplicate Detection
 
 ```python
 df.duplicated()
 ```
 
+Purpose:
+
+- Prevent double counting
+    
+- Preserve data integrity
+
 ---
 
-Step 3
+### Step 3: Population Verification
 
-Verify:
+Ensure:
 
-[  
+$$  
 \sum P_i = 807029  
-]
+$$
 
 ---
 
-Step 4
+### Step 4: Demand Verification
 
-Verify:
+Ensure:
 
-[  
+$$  
 \sum D_i = 1  
-]
+$$
+
+---
+
+## Output Structure
+
+Example:
+
+```python
+{
+    "unit": "Kashar",
+    "population": 89395,
+    "demand": 0.1108
+}
+```
 
 ---
 
 # C.7 GIS Module
 
----
-
 ## Objective
 
-Transform Municipality of Tirana into an operational grid.
+Transform the Municipality of Tirana into an operational geographic grid.
 
 ---
 
-### Input
+## Input
 
 Administrative boundaries.
 
-Source:
+### Source
 
-[City Population Tirana Administrative Units](https://citypopulation.de/en/albania/mun/admin/111__tiran%C3%AB/?utm_source=chatgpt.com)
+City Population Administrative Units dataset.
 
 ---
 
-### Future Improvement
+## Future Improvement
 
 Acquire official GIS polygons from:
 
-- Albanian State Authority for Geospatial Information
+- Albanian State Authority for Geospatial Information (ASIG)
     
 - OpenStreetMap
     
-- Administrative boundary datasets
-    
+- Government administrative datasets
 
-instead of approximated coordinates.
+instead of approximated coordinate representations.
+
+---
+
+## GIS Processing Pipeline
+
+```text
+									Boundary
+									   │
+									   ▼
+								   Validation
+									   │
+									   ▼
+								   Projection
+									   │
+									   ▼
+							  Hexagonal Tessellation
+									   │
+									   ▼
+								  Spatial Join
+```
 
 ---
 
 # C.8 Hexagonal Grid Generator
 
----
-
 ## Motivation
 
 Administrative polygons cannot be routed efficiently.
 
-We therefore discretize space.
+Space is therefore discretized into hexagonal operational units.
 
 ---
 
 ## Process
 
 ```text
-Polygon
-   ↓
-
-Hexagonal Tessellation
-
-   ↓
-
-Hexagonal Cells
-
-   ↓
-
-Graph Nodes
+									Polygon
+									   ↓
+							Hexagonal Tessellation
+									   ↓
+								Hexagonal Cells
+									   ↓
+								  Graph Nodes
 ```
 
 ---
 
 ## H3 Integration
 
-The preferred implementation is:
+Preferred implementation:
 
 ```python
 import h3
 ```
 
-rather than manually generated hexagons.
+instead of manually generated hexagons.
 
 ---
 
-Advantages:
+## Advantages
 
 - Industrial standard
     
-- Uber-developed
+- Developed by Uber
     
 - Proven scalability
     
+- Global indexing support
+    
+- Hierarchical resolution system
+
+---
+
+## Outputs
+
+Each cell contains:
+
+```python
+{
+    "hex_id": "...",
+    "centroid": (...),
+    "population": ...
+}
+```
 
 ---
 
 # C.9 Optimization Module
-
----
 
 ## Goal
 
@@ -7993,39 +7240,52 @@ Determine optimal depot locations.
 
 ---
 
-### Current Method
+## Current Method
 
-Population-weighted K-Means.
+Population-weighted K-Means clustering.
 
 ---
 
-Objective Function
+## Objective Function
 
-[  
+$$  
 J=  
 \sum_i  
-w_i ||x_i-\mu||^2  
-]
+w_i  
+|x_i-\mu|^2  
+$$
 
 ---
 
-Advantages:
+## Advantages
 
-- Fast
+- Fast execution
     
-- Robust
+- Robust convergence
     
-- Easy to implement
+- Easy implementation
     
+- Suitable for preliminary facility location
 
 ---
 
-Limitations:
+## Limitations
 
-- Euclidean assumption
+- Euclidean distance assumptions
     
 - No capacity constraints
     
+- Local optimum risk
+
+---
+
+## Outputs
+
+- Depot coordinates
+    
+- Cluster assignments
+    
+- Service regions
 
 ---
 
@@ -8045,57 +7305,87 @@ Google OR-Tools
 
 ---
 
-Decision Variables
+## Decision Variables
 
-[  
+$$  
 x_{ij}  
-]
+$$
 
-[  
-y_j  
-]
+Assignment variable.
 
 ---
 
-Objective
+$$  
+y_j  
+$$
+
+Facility activation variable.
+
+---
+
+## Objective
 
 Minimize:
 
-[  
+$$  
 FacilityCost  
 +  
 TransportationCost  
-]
+$$
+
+---
+
+## Benefits
+
+Compared with K-Means:
+
+- Globally optimal solutions
+    
+- Capacity constraints
+    
+- Real facility costs
+    
+- Operational realism
 
 ---
 
 # C.11 Routing Module
 
----
-
 ## Graph Construction
 
 Each hexagon center becomes:
 
-[  
+$$  
 v_i  
-]
+$$
 
 ---
 
 Each feasible flight becomes:
 
-[  
+$$  
 e_{ij}  
-]
+$$
 
 ---
 
-Result:
+Resulting graph:
 
-[  
+$$  
 G=(V,E)  
-]
+$$
+
+---
+
+## Graph Attributes
+
+Each edge stores:
+
+```python
+distance
+flight_time
+energy_cost
+```
 
 ---
 
@@ -8103,19 +7393,19 @@ G=(V,E)
 
 Without pruning:
 
-[  
+$$  
 E = O(V^2)  
-]
+$$
 
 ---
 
-Rule:
+## Rule
 
-[  
+$$  
 d(v_i,v_j)  
 \le  
 R_{max}  
-]
+$$
 
 ---
 
@@ -8127,22 +7417,21 @@ edge deleted
 
 ---
 
-Benefits:
+## Benefits
 
 - Smaller graph
     
 - Faster routing
     
-- Lower memory usage
+- Lower memory consumption
     
+- Improved scalability
 
 ---
 
 # C.13 Dijkstra Routing Engine
 
----
-
-### Input
+## Input
 
 ```python
 Source
@@ -8151,7 +7440,7 @@ Destination
 
 ---
 
-### Output
+## Output
 
 ```python
 Optimal Route
@@ -8159,66 +7448,94 @@ Optimal Route
 
 ---
 
-### Complexity
+## Complexity
 
-[  
+$$  
 O((V+E)\log V)  
-]
+$$
+
+---
+
+## Guarantees
+
+- Optimal shortest path
+    
+- Deterministic solution
+    
+- Well-established algorithm
 
 ---
 
 # C.14 A* Routing Engine (Future)
 
----
+## Heuristic
 
-Heuristic:
-
-# [  
+$$  
 h(n)
-
-Haversine(n,goal)  
-]
+=Haversine(n,goal)  
+$$
 
 ---
 
-Expected improvement:
+## Expected Improvement
 
-30–60% fewer node expansions.
+- 30–60% fewer node expansions
+    
+- Faster execution
+    
+- Same optimal solution quality
+
+---
+
+## Future Benefits
+
+- Real-time routing
+    
+- Dynamic replanning
+    
+- Large-scale deployment
 
 ---
 
 # C.15 Fleet Sizing Module
 
----
-
-Objective:
+## Objective
 
 Determine:
 
-[  
+$$  
 c_j  
-]
+$$
 
-number of drones at depot (j).
+number of drones assigned to depot (j).
 
 ---
 
-Queueing Constraint
+## Queueing Constraint
 
-# [  
-\rho
-
+$$  
+\rho=  
 \frac{\lambda}{c\mu}  
 <1  
-]
+$$
+
+---
+
+## Outputs
+
+- Required fleet size
+    
+- Depot utilization
+    
+- Waiting times
+    
+- Throughput estimates
 
 ---
 
 # C.16 Energy Module
 
----
-
-Inputs:
+## Inputs
 
 - Distance
     
@@ -8227,28 +7544,38 @@ Inputs:
 - Speed
     
 - Battery characteristics
-    
 
 ---
 
-Outputs:
+## Outputs
 
 ```python
 Wh
 kWh
-%
-Battery Usage
+Battery Usage %
 ```
+
+---
+
+## Calculated Metrics
+
+- Flight energy
+    
+- Mission energy
+    
+- Remaining battery
+    
+- Safety margins
 
 ---
 
 # C.17 Visualization Module
 
+Produces visual outputs supporting decision making.
+
 ---
 
-Produces:
-
-### Population Maps
+## Population Maps
 
 ```python
 Choropleth Maps
@@ -8256,7 +7583,7 @@ Choropleth Maps
 
 ---
 
-### Depot Maps
+## Depot Maps
 
 ```python
 Depot Locations
@@ -8264,7 +7591,7 @@ Depot Locations
 
 ---
 
-### Flight Paths
+## Flight Paths
 
 ```python
 Route Visualization
@@ -8272,10 +7599,22 @@ Route Visualization
 
 ---
 
-### Heatmaps
+## Heatmaps
 
 ```python
 Demand Density
+```
+
+---
+
+## Dashboard Outputs
+
+Potential future implementation:
+
+```python
+Dash
+Streamlit
+Grafana
 ```
 
 ---
@@ -8306,7 +7645,7 @@ test_energy_model()
 
 ## Integration Tests
 
-Verify:
+Verify the complete workflow:
 
 ```text
 Data
@@ -8320,7 +7659,17 @@ Routing
 Visualization
 ```
 
-works end-to-end.
+---
+
+## Regression Tests
+
+Purpose:
+
+- Detect software degradation
+    
+- Preserve algorithm correctness
+    
+- Ensure reproducibility
 
 ---
 
@@ -8334,7 +7683,7 @@ FROM python:3.12-slim
 
 ---
 
-Container Services
+## Container Services
 
 ```text
 tiranafly-app
@@ -8345,11 +7694,25 @@ grafana
 
 ---
 
+## Benefits
+
+- Environment consistency
+    
+- Easier deployment
+    
+- Reproducible experiments
+    
+- Simplified scaling
+
+---
+
 # C.20 Logging Framework
 
 All operations should be logged.
 
-Example:
+---
+
+## Example
 
 ```python
 INFO:
@@ -8364,15 +7727,38 @@ Route Calculated
 
 ---
 
+## Logging Categories
+
+```text
+INFO
+WARNING
+ERROR
+CRITICAL
+```
+
+---
+
+## Benefits
+
+- Debugging
+    
+- Auditability
+    
+- Operational monitoring
+
+---
+
 # C.21 Configuration Management
 
-Store all constants inside:
+Store all constants in:
 
 ```text
 config/settings.py
 ```
 
-Example:
+---
+
+## Example
 
 ```python
 UAV_MAX_RANGE = 24
@@ -8382,48 +7768,79 @@ HEX_SIZE = 7
 DEPOT_COUNT = 3
 ```
 
-Avoid hardcoding values.
+---
+
+## Advantages
+
+- Centralized configuration
+    
+- Easier experimentation
+    
+- No hardcoded values
 
 ---
 
 # C.22 Performance Benchmarks
 
-Expected performance:
+Expected performance targets:
 
 |Component|Runtime|
 |---|---|
-|Census Loading|<1 sec|
-|Hex Generation|<5 sec|
-|KMeans|<3 sec|
-|Graph Build|<10 sec|
-|Dijkstra Query|<100 ms|
+|Census Loading|< 1 sec|
+|Hex Generation|< 5 sec|
+|K-Means|< 3 sec|
+|Graph Build|< 10 sec|
+|Dijkstra Query|< 100 ms|
+
+---
+
+## Performance Objective
+
+Support near real-time operational decision making.
 
 ---
 
 # C.23 Deployment Architecture
 
 ```text
-User
- │
- ▼
+									User
+									 │
+									 ▼
+								Web Dashboard
+									 │
+								Backend API
+									 │
+							Optimization Engine
+									 │
+								GIS Database
+									 │
+							   Results Storage
+```
 
-Web Dashboard
+---
 
- │
+## Proposed Technologies
 
-Backend API
+### Frontend
 
- │
+```text
+React
+Streamlit
+Dash
+```
 
-Optimization Engine
+### Backend
 
- │
+```text
+FastAPI
+Flask
+```
 
-GIS Database
+### Database
 
- │
-
-Results Storage
+```text
+PostgreSQL
+PostGIS
 ```
 
 ---
@@ -8441,7 +7858,18 @@ Future deployment should include:
 - API Keys
     
 - Audit Logs
+
+---
+
+## Additional Recommendations
+
+- Role-based access control
     
+- Secure secret management
+    
+- Database encryption
+    
+- Automated backups
 
 ---
 
@@ -8464,12 +7892,10 @@ The TiranaFly platform is designed as a modular Operations Research and Geograph
 - Energy modeling
     
 - Interactive visualization
-    
 
 into a single coherent software ecosystem.
 
----
-Excellent. Now we move into what is usually the strongest appendix in an Operations Research, Applied Mathematics, and Software Engineering thesis:
+The architecture supports current research objectives while remaining extensible for future operational deployment, national-scale expansion, real-time optimization, and advanced decision-support applications.
 
 # Appendix D
 
@@ -8494,7 +7920,6 @@ The appendix provides:
 - Selection justification
     
 - Alternative approaches considered
-    
 
 This appendix bridges the gap between theoretical mathematics and software implementation.
 
@@ -8505,50 +7930,48 @@ This appendix bridges the gap between theoretical mathematics and software imple
 The entire workflow can be represented as:
 
 ```text
-Census Data
-     │
-     ▼
-Data Validation
-     │
-     ▼
-Administrative Polygons
-     │
-     ▼
-Hexagonal Tessellation
-     │
-     ▼
-Demand Allocation
-     │
-     ▼
-Population Weighted Clustering
-     │
-     ▼
-Depot Selection
-     │
-     ▼
-Graph Construction
-     │
-     ▼
-Edge Pruning
-     │
-     ▼
-Shortest Path Optimization
-     │
-     ▼
-Fleet Allocation
-     │
-     ▼
-Simulation
-     │
-     ▼
-Visualization
+								Census Data
+								     │
+								     ▼
+							  Data Validation
+								     │
+								     ▼
+						  Administrative Polygons
+								     │
+								     ▼
+						   Hexagonal Tessellation
+								     │
+								     ▼
+							  Demand Allocation
+								     │
+								     ▼
+						Population Weighted Clustering
+								     │
+								     ▼
+							  Depot Selection
+								     │
+								     ▼
+							  Graph Construction
+								     │
+								     ▼
+								Edge Pruning
+								     │
+								     ▼
+						Shortest Path Optimization
+								     │
+								     ▼
+							 Fleet Allocation
+								     │
+								     ▼
+								Simulation
+								     │
+								     ▼
+							   Visualization
 ```
 
 ---
 
 # D.3 Algorithm 1 — Population Normalization
-
----
 
 ## Purpose
 
@@ -8558,37 +7981,37 @@ Transform raw population values into demand coefficients.
 
 ## Input
 
-[  
+$$  
 P_i  
-]
+$$
 
-Population of administrative unit (i)
+Population of administrative unit (i).
 
 ---
 
 ## Output
 
-[  
+$$  
 D_i  
-]
+$$
 
 Normalized demand coefficient.
 
 ---
 
-## Formula
+## Mathematical Formulation
 
-# [  
-D_i
-
-\frac{P_i}{\sum_j P_j}  
-]
+$$  
+D_i=  
+\frac{P_i}  
+{\sum_j P_j}  
+$$
 
 ---
 
 ## Pseudocode
 
-```text
+```
 Algorithm NormalizePopulation
 
 Input:
@@ -8610,15 +8033,27 @@ Return D
 
 ## Complexity
 
-[  
+$$  
 O(n)  
-]
+$$
+
+where:
+
+- (n) = number of administrative units
+
+---
+
+## Why This Algorithm?
+
+Advantages:
+
+- Simple
+- Deterministic
+- Preserves proportional demand distribution
 
 ---
 
 # D.4 Algorithm 2 — Hexagonal Tessellation
-
----
 
 ## Purpose
 
@@ -8628,16 +8063,12 @@ Transform continuous geographic space into discrete routing cells.
 
 ## Why Hexagons?
 
-Because:
+Hexagons provide:
 
-- equal neighbor distances
-    
-- isotropic routing
-    
-- complete coverage
-    
-- minimal directional bias
-    
+- Equal neighbor distances
+- Isotropic routing
+- Complete spatial coverage
+- Minimal directional bias
 
 ---
 
@@ -8655,7 +8086,7 @@ Set of hexagonal cells.
 
 ## Pseudocode
 
-```text
+```
 Algorithm GenerateHexGrid
 
 Input:
@@ -8680,17 +8111,28 @@ Return H
 
 ## Complexity
 
-[  
-O(n)  
-]
+For H3 implementation:
 
-for H3 implementation.
+$$  
+O(n)  
+$$
+
+where:
+
+- (n) = generated cells
+
+---
+
+## Advantages
+
+- Scalable
+- Hierarchical
+- GIS-compatible
+- Industry standard
 
 ---
 
 # D.5 Algorithm 3 — Demand Distribution
-
----
 
 ## Purpose
 
@@ -8698,29 +8140,26 @@ Distribute administrative demand into local hexagonal cells.
 
 ---
 
-## Formula
+## Mathematical Formulation
 
-# [  
-\lambda_h
-
-\Lambda_i  
+$$\Lambda_i  
 \frac{\rho_h}  
 {\sum_k \rho_k}  
-]
+$$
 
-where
+where:
 
-[  
+$$  
 \rho_h  
-]
+$$
 
-is local density.
+represents local density.
 
 ---
 
 ## Pseudocode
 
-```text
+```
 For each Administrative Unit
 
     Calculate Total Density
@@ -8735,9 +8174,23 @@ For each Administrative Unit
 
 ---
 
-# D.6 Algorithm 4 — Population Weighted K-Means
+## Complexity
+
+$$  
+O(n)  
+$$
 
 ---
+
+## Benefits
+
+- Preserves population totals
+- Creates realistic local demand
+- Enables high-resolution analysis
+
+---
+
+# D.6 Algorithm 4 — Population Weighted K-Means
 
 ## Objective
 
@@ -8747,12 +8200,12 @@ Find optimal depot locations.
 
 ## Mathematical Objective
 
-[  
+$$  
 J=  
 \sum_i  
 w_i  
 |x_i-\mu|^2  
-]
+$$
 
 ---
 
@@ -8770,7 +8223,7 @@ Depot locations.
 
 ## Pseudocode
 
-```text
+```
 Choose K Initial Centroids
 
 Repeat
@@ -8789,48 +8242,60 @@ Until convergence
 
 ## Complexity
 
-[  
+$$  
 O(nkt)  
-]
+$$
 
 where:
 
-- n = cells
-    
-- k = clusters
-    
-- t = iterations
-    
+- (n) = cells
+- (k) = clusters
+- (t) = iterations
+
+---
+
+## Convergence
+
+The algorithm terminates when:
+
+$$  
+\Delta J \approx 0  
+$$
+
+or a maximum iteration limit is reached.
 
 ---
 
 # D.7 Why K-Means Was Chosen
 
-Alternative methods:
+Alternative methods considered:
 
 |Method|Rejected Because|
 |---|---|
 |Random Placement|Non-optimal|
-|Hierarchical Clustering|Expensive|
+|Hierarchical Clustering|Computationally expensive|
 |DBSCAN|Density dependent|
 |Spectral Clustering|Computationally heavy|
 
-K-Means offers:
+---
 
-- speed
-    
-- simplicity
-    
-- strong practical performance
-    
+## Advantages of K-Means
 
-for preliminary facility location.
+- Fast
+- Simple
+- Robust
+- Widely used
+- Easy integration
+
+---
+
+## Limitation
+
+Optimizes Euclidean distance rather than transportation cost.
 
 ---
 
 # D.8 Algorithm 5 — p-Median Optimization
-
----
 
 ## Objective
 
@@ -8840,37 +8305,41 @@ Minimize total weighted travel distance.
 
 ## Mathematical Formulation
 
-[  
+$$  
 \min  
 \sum_i  
 \sum_j  
 d_{ij}  
 x_{ij}  
-]
+$$
 
 ---
 
 ## Constraints
 
-Each demand node assigned exactly once.
+### Assignment Constraint
 
-[  
+Each demand node must be assigned exactly once.
+
+$$  
 \sum_j x_{ij}=1  
-]
+$$
 
 ---
 
-Exactly (p) depots.
+### Facility Count Constraint
 
-[  
+Exactly (p) depots must be selected.
+
+$$  
 \sum_j y_j=p  
-]
+$$
 
 ---
 
 ## Pseudocode
 
-```text
+```
 Initialize Candidate Facilities
 
 Build Cost Matrix
@@ -8882,47 +8351,72 @@ Return Optimal Depot Set
 
 ---
 
+## Complexity
+
+$$  
+NP\text{-Hard}  
+$$
+
+---
+
+## Advantage
+
+Unlike K-Means, p-Median directly minimizes transportation cost.
+
+---
+
 # D.9 Why p-Median is Better than K-Means
 
-K-Means:
+K-Means optimizes:
 
-```text
-Euclidean Optimization
+```
+Euclidean Distance
 ```
 
-p-Median:
+---
 
-```text
-Transportation Optimization
+p-Median optimizes:
+
 ```
+Transportation Cost
+```
+
+---
+
+## Implication
 
 For real deployment:
 
-p-Median should replace K-Means.
+- K-Means is suitable for prototyping
+- p-Median should replace K-Means in production
 
 ---
 
 # D.10 Algorithm 6 — Graph Construction
 
----
-
 ## Purpose
 
-Transform geographic network into graph.
+Transform geographic network into graph form.
 
 ---
 
 ## Mathematical Representation
 
-[  
+$$  
 G=(V,E,W)  
-]
+$$
+
+where:
+
+- (V) = nodes
+- (E) = edges
+- (W) = edge weights
 
 ---
 
 ## Pseudocode
 
-```text
+```
 For each Hexagon
 
     Create Node
@@ -8938,15 +8432,21 @@ For each Pair of Nodes
 
 ## Complexity
 
-[  
+$$  
 O(V^2)  
-]
+$$
+
+---
+
+## Outputs
+
+- Network graph
+- Distance matrix
+- Connectivity structure
 
 ---
 
 # D.11 Algorithm 7 — Edge Pruning
-
----
 
 ## Purpose
 
@@ -8954,19 +8454,19 @@ Remove impossible UAV flights.
 
 ---
 
-Constraint:
+## Constraint
 
-[  
+$$  
 d_{ij}  
 \le  
 R_{max}  
-]
+$$
 
 ---
 
 ## Pseudocode
 
-```text
+```
 For each Edge
 
     If Distance > Range
@@ -8984,33 +8484,56 @@ Reduces graph density.
 
 Without pruning:
 
-[  
+$$  
 E=V^2  
-]
+$$
 
 ---
 
 With pruning:
 
-[  
+$$  
 E \ll V^2  
-]
+$$
+
+---
+
+## Operational Importance
+
+Eliminates infeasible routes before optimization.
 
 ---
 
 # D.12 Algorithm 8 — Haversine Distance
 
----
-
 ## Purpose
 
-Accurate Earth-surface distances.
+Accurately compute Earth-surface distances.
+
+---
+
+## Mathematical Formula
+
+$$  
+d=  
+2R  
+\arcsin  
+\left(  
+\sqrt{  
+\sin^2\left(\frac{\Delta\phi}{2}\right)  
++  
+\cos\phi_1  
+\cos\phi_2  
+\sin^2\left(\frac{\Delta\lambda}{2}\right)  
+}  
+\right)  
+$$
 
 ---
 
 ## Pseudocode
 
-```text
+```
 Convert Coordinates to Radians
 
 Compute:
@@ -9028,15 +8551,19 @@ Return Distance
 
 ## Complexity
 
-[  
+$$  
 O(1)  
-]
+$$
+
+---
+
+## Reason for Selection
+
+Provides sufficient geographic accuracy for municipal-scale routing.
 
 ---
 
 # D.13 Algorithm 9 — Dijkstra Routing
-
----
 
 ## Purpose
 
@@ -9048,27 +8575,27 @@ Find minimum-cost route.
 
 Given:
 
-[  
+$$  
 G=(V,E)  
-]
+$$
 
-find shortest path from
+find the shortest path from:
 
-[  
+$$  
 s  
-]
+$$
 
-to
+to:
 
-[  
+$$  
 t  
-]
+$$
 
 ---
 
 ## Pseudocode
 
-```text
+```
 Set Source Distance = 0
 
 Push Source Into Priority Queue
@@ -9086,63 +8613,82 @@ Return Path
 
 ## Complexity
 
-[  
+$$  
 O((V+E)\log V)  
-]
+$$
+
+---
+
+## Properties
+
+- Complete
+- Optimal
+- Deterministic
 
 ---
 
 # D.14 Dijkstra Correctness Proof
 
-Dijkstra relies on:
+Dijkstra relies on the:
 
-Bellman Optimality Principle
+**Bellman Optimality Principle**
 
-If a path is optimal,
+If a path is optimal:
 
-every subpath is optimal.
+every subpath of that path is also optimal.
 
-Therefore once a node is finalized:
+Therefore, once a node becomes finalized:
 
 its shortest distance can never improve.
 
 ---
 
-# D.15 Algorithm 10 — A* Search
+## Consequence
+
+The algorithm always produces the globally shortest path for graphs with non-negative edge weights.
 
 ---
 
+# D.15 Algorithm 10 — A* Search
+
 ## Motivation
 
-Dijkstra explores too many nodes.
+Dijkstra explores many unnecessary nodes.
 
 A* introduces a heuristic.
 
 ---
 
-Evaluation Function
-
-# [  
-f(n)
-
+## Evaluation Function
+$$
 g(n)  
 +  
 h(n)  
-]
+$$
+
+where:
+
+- $(g(n))$ = cost from source
+- $(h(n))$= heuristic estimate
+
+---
+
+## Heuristic
+
+$$HaversineDistance(n,goal)  
+$$
 
 ---
 
 ## Pseudocode
 
-```text
+```
 Insert Source
 
 While Open Set Exists
 
     Select Lowest f(n)
-
     Expand Node
-
     Update Costs
 
 Return Path
@@ -9150,33 +8696,27 @@ Return Path
 
 ---
 
-## Heuristic
-
-# [  
-h(n)
-
-HaversineDistance  
-]
-
----
-
 ## Complexity
 
 Best case:
 
-[  
+$$  
 O(\log n)  
-]
+$$
 
-Practical case:
+Practical performance:
 
 Much faster than Dijkstra.
 
 ---
 
-# D.16 Algorithm 11 — Energy Cost Evaluation
+## Advantage
+
+Explores fewer nodes while preserving optimality.
 
 ---
+
+# D.16 Algorithm 11 — Energy Cost Evaluation
 
 ## Purpose
 
@@ -9184,23 +8724,26 @@ Estimate battery consumption.
 
 ---
 
-Formula
-
-# [  
-E_{ij}
-
+## Energy Model
+$$
 \alpha d  
 +  
 \beta t  
 +  
 \gamma m  
-]
+$$
+
+where:
+
+- (d) = distance
+- (t) = flight time
+- (m) = payload mass
 
 ---
 
 ## Pseudocode
 
-```text
+```
 Compute Distance
 
 Compute Flight Time
@@ -9212,9 +8755,15 @@ Calculate Energy
 
 ---
 
-# D.17 Algorithm 12 — Queueing-Based Fleet Sizing
+## Outputs
+
+- Energy consumption
+- Battery usage
+- Remaining charge
 
 ---
+
+# D.17 Algorithm 12 — Queueing-Based Fleet Sizing
 
 ## Purpose
 
@@ -9222,17 +8771,27 @@ Determine required number of drones.
 
 ---
 
-Model
+## Model
 
-[  
+$$  
 M/M/c  
-]
+$$
+
+---
+
+## Utilization
+
+$$  
+\rho=  
+\frac{\lambda}  
+{c\mu}  
+$$
 
 ---
 
 ## Pseudocode
 
-```text
+```
 Input λ
 
 Input μ
@@ -9250,36 +8809,38 @@ For c = 1 to Max
 
 ## Complexity
 
-[  
+$$  
 O(c)  
-]
+$$
+
+---
+
+## Benefit
+
+Prevents system overload.
 
 ---
 
 # D.18 Algorithm 13 — Monte Carlo Simulation
 
----
-
 ## Purpose
 
-Evaluate uncertainty.
+Evaluate uncertainty and stochastic variation.
 
 ---
 
-Variables
+## Variables
 
-- demand
-    
-- weather
-    
-- battery efficiency
-    
+- Demand
+- Weather
+- Battery efficiency
+- Flight times
 
 ---
 
 ## Pseudocode
 
-```text
+```
 For i = 1 to N
 
     Randomly Generate Parameters
@@ -9295,15 +8856,21 @@ Compute Statistics
 
 ## Complexity
 
-[  
+$$  
 O(N)  
-]
+$$
+
+---
+
+## Outputs
+
+- Confidence intervals
+- Reliability estimates
+- Risk indicators
 
 ---
 
 # D.19 Algorithm 14 — Sensitivity Analysis
-
----
 
 ## Purpose
 
@@ -9311,20 +8878,18 @@ Understand parameter influence.
 
 ---
 
-Parameters
+## Parameters
 
-- population growth
-    
-- battery degradation
-    
-- depot count
-    
+- Population growth
+- Battery degradation
+- Depot count
+- Flight speed
 
 ---
 
 ## Pseudocode
 
-```text
+```
 For each parameter
 
     Perturb Parameter
@@ -9336,29 +8901,39 @@ For each parameter
 
 ---
 
+## Outputs
+
+- Sensitivity rankings
+- Performance elasticity
+- Critical parameters
+
+---
+
 # D.20 Complete Complexity Summary
 
-|Algorithm|Complexity|
-|---|---|
-|Population Normalization|O(n)|
-|Hexagonal Generation|O(n)|
-|Demand Allocation|O(n)|
-|K-Means|O(nkt)|
-|p-Median|NP-Hard|
-|Graph Construction|O(V²)|
-|Edge Pruning|O(E)|
-|Haversine|O(1)|
-|Dijkstra|O((V+E)logV)|
-|A*|O((V+E)logV)|
-|Fleet Sizing|O(c)|
-|Monte Carlo|O(N)|
+|                          |                |
+| ------------------------ | -------------- |
+| Algorithm                | Complexity     |
+| Population Normalization | $O(n)$         |
+| Hexagonal Generation     | $O(n)$         |
+| Demand Allocation        | $O(n)$         |
+| K-Means                  | $O(nkt)$       |
+| p-Median                 | $NP-Hard$      |
+| Graph Construction       | $O(V²)$        |
+| Edge Pruning             | $O(E)$         |
+| Haversine                | $O(1)$         |
+| Dijkstra                 | $O((V+E)logV)$ |
+| A*                       | $O((V+E)logV)$ |
+| Fleet Sizing             | $O(c)$         |
+| Monte Carlo              | $O(N)$         |
 
 ---
 
 # D.21 Algorithm Selection Justification Matrix
 
-|Problem|Selected Algorithm|Reason|
+|   |   |   |
 |---|---|---|
+|Problem|Selected Algorithm|Reason|
 |Spatial Coverage|Hexagonal Grid|Isotropic geometry|
 |Demand Weighting|Population Normalization|Census-based|
 |Depot Placement|K-Means|Fast and practical|
@@ -9376,12 +8951,12 @@ This appendix formally documented every computational procedure used in the Tira
 
 The presented algorithms collectively transform:
 
-[  
+$$  
 Population  
 \rightarrow  
 Demand  
 \rightarrow  
-Spatial Grid  
+Spatial\ Grid  
 \rightarrow  
 Optimization  
 \rightarrow  
@@ -9389,20 +8964,12 @@ Routing
 \rightarrow  
 Simulation  
 \rightarrow  
-Decision Support  
-]
+Decision\ Support  
+$$
 
 which constitutes the complete operational workflow of the TiranaFly platform.
 
----
-Excellent. Now we enter what is usually the largest appendix in the entire thesis because it contains the actual evidence that the TiranaFly methodology works.
-
-Everything before this point was theory, mathematics, software architecture, and algorithms.
-
-Appendix E demonstrates results.
-
----
-
+The integration of Operations Research, Graph Theory, Geographic Information Systems, Optimization, and Simulation enables TiranaFly to function as a comprehensive decision-support framework for population-aware UAV logistics planning within the Municipality of Tirana.
 # Appendix E
 
 # Experimental Results, Validation Scenarios and Performance Evaluation
@@ -9532,13 +9099,7 @@ Population-weighted optimization is justified.
 
 ## Resolution
 
-Hex Radius:
-
-[
-r=1.5km
-]
-
----
+Hex Radius: $r=1.5km$
 
 ## Generated Cells
 
@@ -9560,13 +9121,7 @@ r=1.5km
 
 ### Validation
 
-Coverage achieved:
-
-[
-99.2%
-]
-
-of administrative territory.
+Coverage achieved 99.2% of administrative territory.
 
 ---
 
@@ -9576,11 +9131,7 @@ of administrative territory.
 
 ## Scenario 1
 
-Three Depots
-
-[
-k=3
-]
+Three Depots: k=3
 
 ---
 
@@ -9604,45 +9155,26 @@ k=3
 
 ## Results
 
-Coverage:
-
-[
-96.8%
-]
+Coverage: 96.8%
 
 ---
 
-Average Travel Distance:
-
-[
-13.4km
-]
+Average Travel Distance: 13.4km
 
 ---
 
 # E.6 Four Depot Scenario
 
 ---
-
-[
 k=4
-]
 
 ---
 
-Coverage:
-
-[
-98.5%
-]
+Coverage: 98.5%
 
 ---
 
-Average Distance:
-
-[
-10.8km
-]
+Average Distance: 10.8km
 
 ---
 
@@ -9655,26 +9187,15 @@ Average Distance:
 # E.7 Five Depot Scenario
 
 ---
-
-[
 k=5
-]
 
 ---
 
-Coverage:
-
-[
-99.4%
-]
+Coverage: 99.4%
 
 ---
 
-Average Distance:
-
-[
-8.9km
-]
+Average Distance: 8.9km
 
 ---
 
@@ -9725,27 +9246,15 @@ Hex Cell 088
 
 ## Dijkstra Result
 
-Distance:
-
-[
-14.2km
-]
+Distance: 14.2km
 
 ---
 
-Energy:
-
-[
-639Wh
-]
+Energy: 639Wh
 
 ---
 
-Flight Time:
-
-[
-15.8min
-]
+Flight Time: 15.8min
 
 ---
 
@@ -9767,13 +9276,7 @@ Flight Time:
 
 ---
 
-Savings:
-
-[
-33.6%
-]
-
-compared to random routing.
+Savings: 33.6% compared to random routing.
 
 ---
 
@@ -9826,39 +9329,21 @@ Energy grows approximately linearly with payload.
 
 ---
 
-Arrival Rate:
-
-[
-\lambda=25
-]
+Arrival Rate: $\lambda=25$
 
 orders/hour
 
 ---
 
-Drone Service Rate:
-
-[
-\mu=4
-]
-
-orders/hour
+Drone Service Rate: $\mu=4$ orders/hour
 
 ---
 
-Required Drones:
-
-[
-c=7
-]
+Required Drones: $c=7$
 
 ---
 
-Utilization:
-
-[
-\rho=0.89
-]
+Utilization: $\rho=0.89$
 
 ---
 
@@ -9872,13 +9357,7 @@ System remains stable.
 
 ---
 
-Scenario:
-
-[
-+25%
-]
-
-population-adjusted demand increase.
+Scenario: +25% population-adjusted demand increase.
 
 ---
 
@@ -9906,31 +9385,15 @@ Scenario:
 
 Winter operation.
 
-Battery efficiency loss:
-
-[
-20%
-]
+Battery efficiency loss: 20%
 
 ---
 
-Effective Range:
-
-[
-24km
-\rightarrow
-19.2km
-]
+Effective Range: $24km\rightarrow19.2km$
 
 ---
 
-Coverage:
-
-[
-96.8%
-\rightarrow
-84.2%
-]
+Coverage: $96.8\%\rightarrow84.2\%$
 
 ---
 
@@ -9946,11 +9409,7 @@ Most Affected Areas:
 
 ---
 
-Number of Simulations:
-
-[
-N=10,000
-]
+Number of Simulations: N=10,000
 
 ---
 
@@ -9965,23 +9424,11 @@ Variables
 
 ## Results
 
-Coverage Confidence Interval:
-
-[
-98.7%
-\pm
-1.1%
-]
+Coverage Confidence Interval: $98.7\%\pm1.1\%$
 
 ---
 
-Average Route Length:
-
-[
-11.4
-\pm
-1.8km
-]
+Average Route Length: $11.4\pm1.8km$
 
 ---
 
@@ -10015,11 +9462,7 @@ Hardware:
 
 ---
 
-Total Runtime:
-
-[
-8.73s
-]
+Total Runtime: 8.73s
 
 ---
 
@@ -10089,8 +9532,6 @@ The experimental evaluation demonstrates that:
 ---
 
 # Next Appendix (Appendix F)
-
-Appendix F should be:
 
 # Complete GIS Methodology, Boundary Acquisition, Coordinate Systems, Spatial Processing and Cartographic Production
 
@@ -10203,21 +9644,10 @@ Specific dataset:
 
 Recommended production sources:
 
-### Source 1
-
-[OpenStreetMap](https://www.openstreetmap.org?utm_source=chatgpt.com)
-
 ---
-
-### Source 2
-
-[GeoFabrik Albania Extracts](https://download.geofabrik.de/europe/albania.html?utm_source=chatgpt.com)
-
----
-
-### Source 3
-
-[Albanian State Authority for Geospatial Information (ASIG)](https://www.asig.gov.al/?utm_source=chatgpt.com)
+##### Source 1: [OpenStreetMap](https://www.openstreetmap.org?utm_source=chatgpt.com)
+##### Source 2:[GeoFabrik Albania Extracts](https://download.geofabrik.de/europe/albania.html?utm_source=chatgpt.com)
+##### Source 3 :[Albanian State Authority for Geospatial Information (ASIG)](https://www.asig.gov.al/?utm_source=chatgpt.com)
 
 ---
 
@@ -10239,11 +9669,7 @@ Combining all three creates a complete GIS model.
 
 ## Geographic Coordinates
 
-The entire project uses:
-
-[
-WGS84
-]
+The entire project uses: $WGS84$
 
 ---
 
@@ -10255,15 +9681,7 @@ EPSG:4326
 
 ---
 
-Coordinate format:
-
-[
-Latitude
-]
-
-[
-Longitude
-]
+Coordinate format: $Latitude$, $Longitude$
 
 ---
 
@@ -10321,24 +9739,11 @@ EPSG:32634
 
 ---
 
-Transformation:
-
-[
-(x,y)
-=====
-
-T(\phi,\lambda)
-]
+Transformation: $$(x,y)=T(\phi,\lambda)$$
 
 ---
 
-where:
-
-[
-T
-]
-
-is the projection operator.
+where T is the projection operator.
 
 ---
 
@@ -10414,25 +9819,10 @@ Bow-Tie Polygon
 
 ### Closed Boundary
 
-First vertex:
-
-[
-v_1
-]
-
-must equal
-
-[
-v_n
-]
+First vertex: $v_1$ must equal $v_n$
 
 ---
-
-### Non-Zero Area
-
-[
-Area > 0
-]
+##### Non-Zero Area $Area > 0$
 
 ---
 
@@ -10441,72 +9831,41 @@ Area > 0
 The complete GIS workflow:
 
 ```text
-Administrative Boundary
-          │
-          ▼
-
-Geometry Validation
-
-          │
-          ▼
-
-Projection
-
-          │
-          ▼
-
-Hexagonal Tessellation
-
-          │
-          ▼
-
-Spatial Join
-
-          │
-          ▼
-
-Demand Allocation
-
-          │
-          ▼
-
-Graph Construction
-
-          │
-          ▼
-
-Optimization
+							Administrative Boundary
+							          │
+							          ▼
+							Geometry Validation
+							          │
+							          ▼
+								Projection
+							          │
+							          ▼
+							Hexagonal Tessellation
+							          │
+							          ▼
+								Spatial Join
+							          │
+							          ▼
+							Demand Allocation
+							          │
+							          ▼
+							Graph Construction
+							          │
+							          ▼
+								Optimization
 ```
 
 ---
 
 # F.9 Administrative Unit Centroids
 
-Each administrative unit is represented by:
-
-[
-C_i=(x_i,y_i)
-]
+Each administrative unit is represented by: $C_i=(x_i,y_i)$
 
 ---
 
 Centroid calculation:
-
-[
-C_x
-===
-
-\frac{1}{A}
-\int_A x dA
-]
-
-[
-C_y
-===
-
-\frac{1}{A}
-\int_A y dA
-]
+$$C_x= \frac{1}{A}\int_A x dA$$
+$$C_y=\frac{1}{A}\int_A y dA$$
 
 ---
 
@@ -10540,19 +9899,11 @@ Convert continuous geography into discrete operational units.
 
 ---
 
-Input:
-
-[
-Polygon
-]
+Input: $Polygon$
 
 ---
 
-Output:
-
-[
-Hexagonal\ Cells
-]
+Output: $Hexagonal\ Cells$
 
 ---
 
@@ -10574,41 +9925,17 @@ Hexagons provide:
 
 ---
 
-Every hexagon has:
-
-[
-6
-]
-
-neighbors.
-
----
-
-Squares have:
-
-[
-4+4
-]
-
-unequal neighbors.
-
----
-
-This introduces directional bias.
+Every hexagon has: $6$ neighbors. Squares have: $4+4$ unequal neighbors. This introduces directional bias.
 
 ---
 
 # F.12 H3 Spatial Indexing
 
-The recommended production solution is:
-
-[H3 Geospatial Indexing System](https://h3geo.org/?utm_source=chatgpt.com)
+The recommended production solution is: [H3 Geospatial Indexing System](https://h3geo.org/?utm_source=chatgpt.com)
 
 ---
 
-Developed by:
-
-Uber Technologies
+Developed by: Uber Technologies
 
 ---
 
@@ -10649,20 +9976,15 @@ each cell must be assigned to an administrative unit.
 ---
 
 Operation:
-
-[
+$$
 Hexagon
 \cap
 Polygon
-]
+$$
 
 ---
 
-Rule:
-
-If centroid lies inside polygon:
-
-Assign hexagon to polygon.
+Rule: If centroid lies inside polygon => Assign hexagon to polygon.
 
 ---
 
@@ -10676,20 +9998,16 @@ gpd.sjoin()
 
 # F.14 Population Distribution Methodology
 
-Population exists at administrative level.
-
-Hexagons require local population.
+Population exists at administrative level. Hexagons require local population.
 
 ---
 
 Therefore:
-
-[
+$$
 Population_i
 \rightarrow
 Population_h
-]
-
+$$
 ---
 
 Method:
@@ -10699,37 +10017,22 @@ Population-weighted interpolation.
 ---
 
 Formula:
-
-[
+$$
 P_h
-===
-
+=
 P_i
 \frac{\rho_h}
 {\sum \rho_h}
-]
-
+$$
 ---
 
-where:
-
-[
-\rho_h
-]
-
-represents local density.
+where: $\rho_h$ represents local density.
 
 ---
 
 # F.15 Spatial Demand Surface
 
-Demand is transformed into:
-
-[
-f(x,y)
-]
-
-continuous demand density.
+Demand is transformed into: $f(x,y)$ continuous demand density.
 
 ---
 
@@ -10759,17 +10062,9 @@ Examples:
 
 Elevation influences:
 
-[
-Energy
-]
-
-[
-Flight Time
-]
-
-[
-Coverage
-]
++ Energy
++ Flight Time
++ Coverage
 
 ---
 
@@ -10777,51 +10072,33 @@ Coverage
 
 Future implementation:
 
-Use:
-
-[NASA SRTM Elevation Data](https://www.earthdata.nasa.gov/data/catalog/lpcloud-srtmgl1-003?utm_source=chatgpt.com)
+Use: [NASA SRTM Elevation Data](https://www.earthdata.nasa.gov/data/catalog/lpcloud-srtmgl1-003?utm_source=chatgpt.com)
 
 ---
 
-Elevation:
-
-[
-z(x,y)
-]
-
-becomes third routing dimension.
+Elevation: $z(x,y)$ becomes third routing dimension.
 
 ---
 
 # F.18 3D Routing Extension
 
-Current routing:
-
-[
-(x,y)
-]
+Current routing: $(x,y)$
 
 ---
 
-Future routing:
-
-[
-(x,y,z)
-]
+Future routing: $(x,y,z)$
 
 ---
 
 Distance becomes:
-
-[
+$$
 d=
-\sqrt{
+X\sqrt{
 (x_2-x_1)^2+
 (y_2-y_1)^2+
 (z_2-z_1)^2
 }
-]
-
+$$
 ---
 
 # F.19 Cartographic Standards
@@ -10840,36 +10117,25 @@ All maps should contain:
 # F.20 Map Production Workflow
 
 ```text
-Boundary
-   │
-   ▼
-
-Projection
-
-   │
-   ▼
-
-Hexagons
-
-   │
-   ▼
-
-Demand Layer
-
-   │
-   ▼
-
-Depot Layer
-
-   │
-   ▼
-
-Routes
-
-   │
-   ▼
-
-Final Map
+									Boundary
+									   │
+									   ▼
+									Projection
+									   │
+									   ▼
+									Hexagons
+									   │
+									   ▼
+								  Demand Layer
+									   │
+									   ▼
+								  Depot Layer
+									   │
+									   ▼
+								     Routes
+									   │
+									   ▼
+									Final Map
 ```
 
 ---
@@ -10880,42 +10146,23 @@ The following checks must be performed:
 
 ---
 
-### Coverage Validation
-
-[
-Coverage > 99%
-]
+##### Coverage Validation: $Coverage > 99\%$
 
 ---
 
-### Hexagon Completeness
-
-No gaps.
+##### Hexagon Completeness: $No gaps.$
 
 ---
 
-### Hexagon Overlap
-
-[
-Overlap = 0
-]
+##### Hexagon Overlap: $Overlap = 0$
 
 ---
 
-### Demand Conservation
-
-[
-\sum P_h
-========
-
-807029
-]
+##### Demand Conservation: $\sum P_h=807029$
 
 ---
 
-### Boundary Consistency
-
-All cells belong to one administrative unit.
+##### Boundary Consistency: All cells belong to one administrative unit.
 
 ---
 
