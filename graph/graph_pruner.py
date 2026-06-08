@@ -1,4 +1,5 @@
 import networkx as nx
+import math
 from typing import List, Set, Callable
 from .models import BaseEdge
 
@@ -46,3 +47,32 @@ class GraphPruner:
         
         graph.remove_edges_from(edges_to_remove)
         return len(edges_to_remove)
+
+class NetworkTopologyPruner:
+    def __init__(self, max_range_km: float = 24.0, power_coeff_wh_km: float = 45.0):
+        self.max_range_km = max_range_km
+        self.power_coeff = power_coeff_wh_km
+
+    def compute_haversine(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+        R = 6371.0
+        dlat = math.radians(lat2 - lat1)
+        dlon = math.radians(lon2 - lon1)
+        a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
+        return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1-a))
+
+    def prune_and_weight_edges(self, graph: nx.DiGraph) -> nx.DiGraph:
+        nodes = list(graph.nodes(data=True))
+        
+        for i, (u_id, u_data) in enumerate(nodes):
+            for j, (v_id, v_data) in enumerate(nodes):
+                if u_id == v_id: continue
+                
+                dist = self.compute_haversine(
+                    u_data['lat'], u_data['lon'],
+                    v_data['lat'], v_data['lon']
+                )
+                
+                if dist <= self.max_range_km:
+                    graph.add_edge(u_id, v_id, distance=dist, weight=dist * self.power_coeff)
+                    
+        return graph

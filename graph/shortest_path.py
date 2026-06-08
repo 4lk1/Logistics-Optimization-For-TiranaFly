@@ -27,11 +27,25 @@ class ShortestPathEngine:
         Faster than Dijkstra when a good heuristic is available.
         """
         def heuristic(u, v):
-            u_data = graph.nodes[u]['data']
-            v_data = graph.nodes[v]['data']
-            # Haversine distance as heuristic
-            from .graph_builder import GraphBuilder
-            return GraphBuilder._haversine(u_data.lat, u_data.lng, v_data.lat, v_data.lng) / 15.0 # Min possible cost estimate
+            try:
+                u_data = graph.nodes[u].get('data', graph.nodes[u])
+                v_data = graph.nodes[v].get('data', graph.nodes[v])
+                
+                # Check if data is an object with lat/lng or a dict
+                u_lat = getattr(u_data, 'lat', u_data.get('lat', 41.3))
+                u_lon = getattr(u_data, 'lng', getattr(u_data, 'lon', u_data.get('lon', 19.8)))
+                v_lat = getattr(v_data, 'lat', v_data.get('lat', 41.3))
+                v_lon = getattr(v_data, 'lng', getattr(v_data, 'lon', v_data.get('lon', 19.8)))
+                
+                # Haversine distance as heuristic
+                R = 6371000
+                from math import radians, cos, sin, asin, sqrt
+                dLat = radians(v_lat - u_lat)
+                dLon = radians(v_lon - u_lon)
+                a = sin(dLat / 2)**2 + cos(radians(u_lat)) * cos(radians(v_lat)) * sin(dLon / 2)**2
+                return (2 * R * asin(sqrt(a))) / 15.0
+            except:
+                return 0.0
 
         path = nx.astar_path(graph, source, target, heuristic=heuristic, weight=weight)
         cost = nx.astar_path_length(graph, source, target, heuristic=heuristic, weight=weight)
@@ -83,3 +97,20 @@ class ShortestPathEngine:
             }
         
         return results
+
+class ShortestPathRoutingEngine:
+    @staticmethod
+    def execute_dijkstra(graph, source, target):
+        return ShortestPathEngine.dijkstra(graph, source, target)
+        
+    @staticmethod
+    def execute_a_star(graph, source, target):
+        return ShortestPathEngine.a_star(graph, source, target)
+        
+    @staticmethod
+    def execute_bidirectional_dijkstra(graph, source, target):
+        return ShortestPathEngine.bidirectional_dijkstra(graph, source, target)
+        
+    @staticmethod
+    def execute_yen_k_shortest_paths(graph, source, target, k=1):
+        return ShortestPathEngine.yen_k_shortest_paths(graph, source, target, k)

@@ -2,7 +2,7 @@
 import random
 from typing import List, Dict, Any
 from schemas.io_models import Depot, HexCell
-from graph.shortest_path import ShortestPathRoutingEngine
+from graph.shortest_path import ShortestPathEngine
 
 class TiranaFlyStochasticSimulationEngine:
     def __init__(self, depots: List[Depot], cells: List[HexCell], graph_layer: Any):
@@ -28,7 +28,7 @@ class TiranaFlyStochasticSimulationEngine:
                 
             try:
                 # Calculate paths using the short-path routing engine
-                path, cost = ShortestPathRoutingEngine.execute_dijkstra(
+                path, cost = ShortestPathEngine.dijkstra(
                     self.graph, assigned_depot.depot_id, target_cell.h3_index
                 )
                 if len(path) > 0 and cost < float('inf'):

@@ -10,29 +10,32 @@ from simulation.simulator import TiranaFlyStochasticSimulationEngine
 from visualization.maps import LogisticsMapVisualizer
 from gis.coordinate_utils import haversine_distance, validate_tirana_bounds
 from optimization.facility_location import FacilityLocationComparativeHarness
-from fleet.queue_model import DepotQueueEngine
+from fleet.queue_models import DepotQueueEngine
 from fleet.battery_optimizer import BatteryConsumptionEngine
 from typing import List
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s - %(levelname)s] %(message)s")
 
-# Exact baseline population data from the 2023 Census
+# Official Census 2023 Population Data (MANDATORY BASLINE)
 OFFICIAL_CENSUS_DATA = [
     {"name": "Tirane", "population": 598176},
     {"name": "Kashar", "population": 89395},
-    {"name": "Farke", "population": 36266},
     {"name": "Dajt", "population": 35170},
-    {"name": "Vaqarr", "population": 9221},
-    {"name": "Zall Herr", "population": 8822},
+    {"name": "Farke", "population": 36266},
     {"name": "Petrele", "population": 5723},
+    {"name": "Vaqarr", "population": 9221},
     {"name": "Peze", "population": 5704},
-    {"name": "Berzhite", "population": 4291},
     {"name": "Ndroq", "population": 4169},
     {"name": "Baldushk", "population": 3879},
-    {"name": "Zall Bastar", "population": 2813},
+    {"name": "Berzhite", "population": 4291},
     {"name": "Krrabe", "population": 2023},
+    {"name": "Zall Bastar", "population": 2813},
+    {"name": "Zall Herr", "population": 8822},
     {"name": "Shengjergj", "population": 1377}
 ]
+
+# Total Population P = 807,029
+MUNICIPALITY_TOTAL_POPULATION = 807029
 
 def generate_synthetic_h3_grid_seed() -> List[HexCell]:
     """Generates continuous geographic grid arrays across the 14 administrative zones."""
@@ -69,7 +72,7 @@ def execute_production_pipeline():
     logging.info("------------------------------------------------------------------------")
     
     # 1. Load census demographics and verify structural invariants
-    mapper = PopulationMapper(target_denominator=807029)
+    mapper = PopulationMapper(target_denominator=MUNICIPALITY_TOTAL_POPULATION)
     raw_cells = generate_synthetic_h3_grid_seed()
     cell_matrix = mapper.distribute_population_to_grid(OFFICIAL_CENSUS_DATA, raw_cells)
     

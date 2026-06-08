@@ -83,3 +83,9 @@ class QueueingModels:
             "W": w, "Wq": wq,
             "stable": True
         }
+
+class DepotQueueEngine:
+    """Legacy shim for QueueingModels"""
+    @staticmethod
+    def mmc_model(arrival_rate: float, service_rate: float, c: int) -> Dict[str, float]:
+        return QueueingModels.mmc_model(arrival_rate, service_rate, c)
