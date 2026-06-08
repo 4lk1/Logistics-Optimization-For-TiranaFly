@@ -4,7 +4,7 @@ from typing import List, Dict, Any
 from main import OFFICIAL_CENSUS_DATA, generate_synthetic_h3_grid_seed
 from gis.population_mapper import PopulationMapper
 
-router = APIRouter(prefix="/population", tags=["Demographics & Spatial Population Mapping"])
+router = APIRouter(tags=["Demographics & Spatial Population Mapping"])
 
 @router.get("/census")
 async def get_census_data() -> List[Dict[str, Any]]:

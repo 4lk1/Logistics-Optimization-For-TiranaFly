@@ -11,7 +11,7 @@ from graph.graph_builder import FlightGraphBuilder
 from graph.graph_pruner import NetworkTopologyPruner
 from graph.shortest_path import ShortestPathRoutingEngine
 
-router = APIRouter(prefix="/route", tags=["Routing Optimization Engines"])
+router = APIRouter(tags=["Routing Optimization Engines"])
 
 class RouteRequest(BaseModel):
     origin_node: str = Field(..., example="DEPOT_00")

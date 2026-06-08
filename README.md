@@ -16,6 +16,7 @@
 - [Project Overview](#-project-overview)
 - [System Architecture](#-system-architecture)
 - [Key Features](#-key-features)
+- [Visual Testing & Coverage Guide](#-visual-testing--coverage-guide)
 - [Requirements](#-requirements)
 - [Installation Guide](#-installation-guide)
 - [Execution & Reproducibility](#-execution--reproducibility)
@@ -55,6 +56,41 @@ The system follows a modular, decoupled architecture:
 - **Energy Models**: Real-world flight power consumption calculations (Wh/km) based on drone mass and air density.
 - **Automated Visualization**: Generates thematic choropleth maps and active flight path overlays.
 - **Predictive Analytics**: Anomaly detection and battery degradation tracking for fleet longevity.
+
+---
+
+##  Visual Testing & Coverage Guide
+
+To test the system visually and verify full hexagonal coverage for drone operations:
+
+### 1. Generating Spatial Coverage (Hexagons)
+To generate the thematic map showcasing administrative units and the full H3 hexagonal coverage:
+```bash
+# This script computes the tessellation and generates visual heatmaps
+python MainMap.py
+```
+*   **What to look for**: Check the `visualization/` directory for generated PNG files. These visualize the distribution of hexagons across Tirana's administrative units.
+
+### 2. Interactive Frontend Visualization
+To explore the hexagonal grid and depot placements interactively:
+1.  **Ensure Docker Stack is Running**:
+    ```bash
+    docker-compose -f backend/docker-compose.yml up -d
+    ```
+2.  **Start FastAPI Backend**:
+    ```bash
+    uvicorn api.app:app --reload
+    ```
+3.  **Start Frontend Dev Server**:
+    ```bash
+    cd frontend
+    npm run dev
+    ```
+4.  **Verify Coverage**:
+    *   Open `http://localhost:5173` in your browser.
+    *   Navigate to the **Spatial/Map** view.
+    *   Ensure the hexagonal layer is enabled. It should render a complete coverage over Tirana's administrative map.
+    *   Use the `Initialize` button if no hexagons are visible to populate the GIS database.
 
 ---
 
@@ -219,5 +255,7 @@ To reproduce the thesis results exactly:
 ##  Academic Note
 This project was developed as part of a Master's Project on Urban Logistics.
 **Citation Expectation**: Please cite as "TiranaFly: Autonomous Urban Drone Logistics Optimization Platform (2026)".
+
+# README.md
 
 # README.md

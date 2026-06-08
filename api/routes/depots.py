@@ -7,7 +7,7 @@ from optimization.depot_selector import DepotLocationOptimizer
 from fleet.fleet_allocator import FleetAllocationEngine
 from gis.population_mapper import PopulationMapper
 
-router = APIRouter(prefix="/depots", tags=["Core Infrastructure Query Layer"])
+router = APIRouter(tags=["Core Infrastructure Query Layer"])
 
 @router.get("")
 async def get_active_depot_configurations(target_hubs: int = 3, fleet_pool: int = 65) -> List[Dict[str, Any]]:

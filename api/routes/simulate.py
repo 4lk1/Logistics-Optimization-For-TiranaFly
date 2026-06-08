@@ -11,7 +11,7 @@ from graph.graph_builder import FlightGraphBuilder
 from graph.graph_pruner import NetworkTopologyPruner
 from simulation.simulator import TiranaFlyStochasticSimulationEngine
 
-router = APIRouter(prefix="/simulate", tags=["Stochastic Simulation Engine"])
+router = APIRouter(tags=["Stochastic Simulation Engine"])
 
 class SimulationRequest(BaseModel):
     iterations: int = Field(default=250, ge=10, le=1000)

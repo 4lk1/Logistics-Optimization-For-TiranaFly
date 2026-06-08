@@ -8,7 +8,7 @@ from optimization.depot_selector import DepotLocationOptimizer
 from gis.population_mapper import PopulationMapper
 from gis.coordinate_utils import haversine_distance
 
-router = APIRouter(prefix="/coverage", tags=["Network Coverage Analysis"])
+router = APIRouter(tags=["Network Coverage Analysis"])
 
 class CoverageRequest(BaseModel):
     depot_count: int = Field(default=3, ge=1, le=10)
