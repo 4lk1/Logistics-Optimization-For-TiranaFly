@@ -11,7 +11,7 @@
 
 ---
 
-## 🚀 Quick Start Guide
+##  Quick Start Guide
 
 Follow these steps to get the full stack running locally:
 

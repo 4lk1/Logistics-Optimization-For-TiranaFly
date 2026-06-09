@@ -91,7 +91,7 @@ export default function TiranaMap({
       </DeckGL>
 
       {/* Map Controls */}
-      <div className="absolute bottom-8 right-8 flex flex-col space-y-2">
+      <div className="absolute bottom-8 right-8 flex flex-col space-y-2 z-50">
         <button className="w-10 h-10 glass rounded-lg flex items-center justify-center text-white hover:bg-blue-600/40 transition-colors" onClick={() => setViewport({ ...viewport, zoom: viewport.zoom + 1 })}>
           +
         </button>

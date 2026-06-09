@@ -11,7 +11,7 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 # Import route modules
-from api.routes import population, depots, optimize, routes, simulate, coverage
+from api.routes import population, depots, routes, simulate, coverage
 from backend.api.routes import gis, fleet, optimization as optimization_backend
 
 @asynccontextmanager
@@ -46,7 +46,6 @@ async def health_check():
 # Include Routers with /api/v1 prefix
 app.include_router(population.router, prefix="/api/v1/population", tags=["Population"])
 app.include_router(depots.router, prefix="/api/v1/depots", tags=["Depots"])
-app.include_router(optimize.router, prefix="/api/v1/optimization", tags=["Operations Research Solvers"])
 app.include_router(routes.router, prefix="/api/v1/routes", tags=["Routes"])
 app.include_router(simulate.router, prefix="/api/v1/simulate", tags=["Simulation"])
 app.include_router(coverage.router, prefix="/api/v1/coverage", tags=["Coverage"])
