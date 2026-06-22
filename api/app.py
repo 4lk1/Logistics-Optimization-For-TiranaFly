@@ -11,8 +11,7 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 # Import route modules
-from api.routes import population, depots, routes, simulate, coverage
-from backend.api.routes import gis, fleet, optimization as optimization_backend
+from api.routes import population, depots, routes, simulate, coverage, gis, fleet, optimize
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -50,10 +49,10 @@ app.include_router(routes.router, prefix="/api/v1/routes", tags=["Routes"])
 app.include_router(simulate.router, prefix="/api/v1/simulate", tags=["Simulation"])
 app.include_router(coverage.router, prefix="/api/v1/coverage", tags=["Coverage"])
 
-# Include Backend Routers
+# Include Local Ported Routers
 app.include_router(gis.router, prefix="/api/v1/gis", tags=["GIS"])
 app.include_router(fleet.router, prefix="/api/v1/fleet", tags=["Fleet"])
-app.include_router(optimization_backend.router, prefix="/api/v1/optimization", tags=["Optimization"])
+app.include_router(optimize.router, prefix="/api/v1/optimization", tags=["Optimization"])
 
 @app.get("/", tags=["API Base Layer"])
 async def root():
