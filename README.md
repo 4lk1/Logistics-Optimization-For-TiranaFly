@@ -68,5 +68,3 @@ npm run dev
 - [Project Structure](#-project-structure)
 - [Reproducibility](#-reproducibility)
 - [Common Issues & Debugging](#-common-issues--debugging)
-
-*(... remainder of original README content ...)*
