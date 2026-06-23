@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { 
-  AdministrativeUnit, HexCell, Depot, Drone, 
-  OptimizationResult, Mission 
+  AdministrativeUnit, HexCell, Drone, OptimizationResult, SimulationRequest, SimulationResult
 } from '../types';
 
 const apiClient = axios.create({
@@ -18,7 +17,7 @@ export const gisApi = {
 };
 
 export const optimizationApi = {
-  run: (maxDepots: number) => apiClient.post<OptimizationResult>(`/optimization/run?max_depots=${maxDepots}`).then(res => res.data),
+  run: (maxDepots: number) => apiClient.post('/optimization/run', { depot_count: maxDepots }).then(res => res.data),
   getLatest: () => apiClient.get<OptimizationResult>('/optimization/latest').then(res => res.data),
 };
 
@@ -26,6 +25,10 @@ export const fleetApi = {
   getStatus: () => apiClient.get<Drone[]>('/fleet/status').then(res => res.data),
   initialize: (depotId: string, numDrones: number) => 
     apiClient.post(`/fleet/initialize/${depotId}?num_drones=${numDrones}`),
+};
+
+export const simulationApi = {
+  run: (payload: SimulationRequest) => apiClient.post<SimulationResult>('/simulate', payload).then(res => res.data),
 };
 
 export default apiClient;

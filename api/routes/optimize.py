@@ -14,7 +14,7 @@ from optimization.facility_location import FacilityLocationComparativeHarness
 router = APIRouter(tags=["Operations Research Solvers"])
 
 class OptimizeRequest(BaseModel):
-    depot_count: int = Field(default=3, ge=1, le=10)
+    depot_count: int = Field(default=3, ge=1, le=25)
     total_fleet_pool: int = Field(default=65, ge=10, le=200)
     algorithm: str = Field(default="kmeans", description="kmeans, p_median, or p_center")
 
@@ -59,6 +59,8 @@ async def get_latest_optimization():
             "id": f"DEPOT_{idx:02d}",
             "name": f"Hub {idx+1}",
             "capacity": 30,
+            "lat": lat,
+            "lng": lon,
             "geom": {"type": "Point", "coordinates": [lon, lat]}
         })
         

@@ -1,5 +1,6 @@
 # filename: main.py
 import logging
+import h3
 from schemas.io_models import HexCell, Depot
 from gis.population_mapper import PopulationMapper
 from optimization.depot_selector import DepotLocationOptimizer
@@ -8,7 +9,14 @@ from graph.graph_builder import FlightGraphBuilder
 from graph.graph_pruner import NetworkTopologyPruner
 from simulation.simulator import TiranaFlyStochasticSimulationEngine
 from visualization.maps import LogisticsMapVisualizer
-from gis.coordinate_utils import haversine_distance, validate_tirana_bounds
+from gis.coordinate_utils import (
+    TIRANA_MAX_LAT,
+    TIRANA_MAX_LON,
+    TIRANA_MIN_LAT,
+    TIRANA_MIN_LON,
+    haversine_distance,
+    validate_tirana_bounds,
+)
 from optimization.facility_location import FacilityLocationComparativeHarness
 from fleet.queue_models import DepotQueueEngine
 from fleet.battery_optimizer import BatteryConsumptionEngine
@@ -36,34 +44,71 @@ OFFICIAL_CENSUS_DATA = [
 
 # Total Population P = 807,029
 MUNICIPALITY_TOTAL_POPULATION = 807029
+H3_GRID_RESOLUTION = 8
+
+ADMIN_UNIT_ANCHORS = {
+    "Tirane": (41.3275, 19.8187),
+    "Kashar": (41.3450, 19.7250),
+    "Farke": (41.2950, 19.8720),
+    "Dajt": (41.3780, 19.9210),
+    "Vaqarr": (41.2780, 19.7410),
+    "Zall Herr": (41.4110, 19.7880),
+    "Petrele": (41.2520, 19.8610),
+    "Peze": (41.2280, 19.6890),
+    "Berzhite": (41.2380, 19.9520),
+    "Ndroq": (41.2720, 19.6380),
+    "Baldushk": (41.1920, 19.8050),
+    "Zall Bastar": (41.4520, 19.9480),
+    "Krrabe": (41.2110, 19.9820),
+    "Shengjergj": (41.3410, 20.1180),
+}
+
+def lat_lon_to_h3(lat: float, lon: float, resolution: int) -> str:
+    """Support both h3-py v3 and v4 naming."""
+    if hasattr(h3, "latlng_to_cell"):
+        return h3.latlng_to_cell(lat, lon, resolution)
+    return h3.geo_to_h3(lat, lon, resolution)
+
+def h3_to_lat_lon(h3_index: str) -> tuple[float, float]:
+    """Support both h3-py v3 and v4 naming."""
+    if hasattr(h3, "cell_to_latlng"):
+        return h3.cell_to_latlng(h3_index)
+    return h3.h3_to_geo(h3_index)
+
+def nearest_admin_unit(lat: float, lon: float) -> str:
+    """Assign a generated H3 cell to the nearest census anchor."""
+    return min(
+        ADMIN_UNIT_ANCHORS,
+        key=lambda name: haversine_distance(lat, lon, *ADMIN_UNIT_ANCHORS[name]),
+    )
 
 def generate_synthetic_h3_grid_seed() -> List[HexCell]:
-    """Generates continuous geographic grid arrays across the 14 administrative zones."""
+    """Generates full H3 coverage across Tirana's operational bounding box."""
     cells = []
-    idx = 0
-    # Center anchors matching real-world coordinates for the 14 units
-    anchors = {
-        "Tirane": (41.3275, 19.8187, 45), "Kashar": (41.3450, 19.7250, 15),
-        "Farke": (41.2950, 19.8720, 12), "Dajt": (41.3780, 19.9210, 12),
-        "Vaqarr": (41.2780, 19.7410, 6), "Zall Herr": (41.4110, 19.7880, 6),
-        "Petrele": (41.2520, 19.8610, 5), "Peze": (41.2280, 19.6890, 5),
-        "Berzhite": (41.2380, 19.9520, 4), "Ndroq": (41.2720, 19.6380, 4),
-        "Baldushk": (41.1920, 19.8050, 4), "Zall Bastar": (41.4520, 19.9480, 3),
-        "Krrabe": (41.2110, 19.9820, 3), "Shengjergj": (41.3410, 20.1180, 3)
-    }
-    
-    for name, (lat, lon, count) in anchors.items():
-        for i in range(count):
-            h3_str = f"881e263a{idx:07x}"
-            # Disperse cells around the core region centers
-            cells.append(HexCell(
-                h3_index=h3_str,
-                centroid_lat=lat + (i * 0.006 * (-1 if i % 2 == 0 else 1)),
-                centroid_lon=lon + (i * 0.006 * (1 if i % 3 == 0 else -1)),
-                boundary_coordinates=[],
-                assigned_unit=name
-            ))
-            idx += 1
+    hexes = set()
+    lat_step = 0.006
+    lon_step = 0.008
+
+    lat = TIRANA_MIN_LAT
+    while lat <= TIRANA_MAX_LAT:
+        lon = TIRANA_MIN_LON
+        while lon <= TIRANA_MAX_LON:
+            hexes.add(lat_lon_to_h3(lat, lon, H3_GRID_RESOLUTION))
+            lon += lon_step
+        lat += lat_step
+
+    for h3_str in sorted(hexes):
+        cell_lat, cell_lon = h3_to_lat_lon(h3_str)
+        if not validate_tirana_bounds(cell_lat, cell_lon):
+            continue
+
+        cells.append(HexCell(
+            h3_index=h3_str,
+            centroid_lat=cell_lat,
+            centroid_lon=cell_lon,
+            boundary_coordinates=[],
+            assigned_unit=nearest_admin_unit(cell_lat, cell_lon),
+        ))
     return cells
 
 def execute_production_pipeline():

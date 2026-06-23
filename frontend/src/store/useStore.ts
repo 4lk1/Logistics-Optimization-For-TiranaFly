@@ -1,15 +1,17 @@
 import { create } from 'zustand';
-import { Drone, OptimizationResult, FleetStatus } from '../types';
+import { Drone, OptimizationResult } from '../types';
+
+interface MapViewport {
+  latitude: number;
+  longitude: number;
+  zoom: number;
+  pitch: number;
+  bearing: number;
+}
 
 interface AppState {
   // Map State
-  viewport: {
-    latitude: number;
-    longitude: number;
-    zoom: number;
-    pitch: number;
-    bearing: number;
-  };
+  viewport: MapViewport;
   layers: {
     boundaries: boolean;
     h3: boolean;
@@ -24,7 +26,7 @@ interface AppState {
   fleet: Drone[];
   
   // Actions
-  setViewport: (viewport: any) => void;
+  setViewport: (viewport: MapViewport) => void;
   toggleLayer: (layer: keyof AppState['layers']) => void;
   setLatestOptimization: (result: OptimizationResult) => void;
   setFleet: (fleet: Drone[]) => void;
