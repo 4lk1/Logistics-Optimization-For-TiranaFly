@@ -1,1 +1,23 @@
 .aider*
+
+# Cursor local workspace state
+.cursor/
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Python environments and caches
+venv/
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+
+# Local logs and OS files
+*.log
+.DS_Store
+Thumbs.db
